@@ -264,17 +264,25 @@
    * 若某张图片缺失或加载失败，会自动回退到该层级的 emoji。
    * -------------------------------------------- */
   const IMG_DIR = "assets";
+  const IMG_VER = "2";
   function fruitImagePath(tier) {
-    return IMG_DIR + "/fruit_" + String(tier).padStart(2, "0") + ".png";
+    return IMG_DIR + "/fruit_" + String(tier).padStart(2, "0") + ".png?v=" + IMG_VER;
   }
   function loadFruitImages(onReady) {
-    let pending = FRUITS.length;
     FRUITS.forEach((data, tier) => {
       const img = new Image();
-      const done = () => { pending--; if (pending === 0 && onReady) onReady(); };
-      img.onload = done;
-      img.onerror = done;
-      img.src = fruitImagePath(tier);
+      const base = fruitImagePath(tier);
+      let tries = 0;
+      img.onload = function () { if (onReady) onReady(); };
+      img.onerror = function () {
+        tries += 1;
+        if (tries <= 3) {
+          img.src = base + "&retry=" + tries + "&t=" + Date.now();
+        } else if (onReady) {
+          onReady();
+        }
+      };
+      img.src = base;
       data.image = img;
     });
   }
