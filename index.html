@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>合成大陶文</title>
+<meta name="theme-color" content="#1a1a3a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="合成大陶文">
+<style>
+  :root {
+    --bg1: #2b2b5e;
+    --bg2: #1a1a3a;
+    --panel: #ffffff;
+    --accent: #ff6b6b;
+    --ink: #2b2b3a;
+    --muted: #8a8aa0;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%);
+    color: var(--ink);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px;
+  }
+  .panel {
+    background: var(--panel);
+    border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    max-height: 100%;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    gap: 12px;
+  }
+  .title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: .5px;
+  }
+  .scores { display: flex; align-items: center; gap: 14px; }
+  .score-box { text-align: right; }
+  .score-box .label { font-size: 11px; color: var(--muted); }
+  .score-box .value { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .next-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 58px;
+  }
+  .next-box .label { font-size: 11px; color: var(--muted); }
+  .next-preview {
+    margin-top: 2px;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .next-preview img { width: 32px; height: 32px; display: block; }
+  .next-preview .next-emoji { font-size: 30px; line-height: 1; }
+  .progression {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 8px 16px;
+    background: #fafaff;
+    border-bottom: 1px solid #eee;
+    overflow: hidden;
+  }
+  .progression .pf-item {
+    width: var(--pf, 24px);
+    height: var(--pf, 24px);
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 auto;
+    display: block;
+  }
+  .progression .pf-emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--pf, 24px) * 0.86);
+  }
+  .progression .pf-arrow {
+    color: #b9b9cc;
+    font-size: calc(var(--pf, 24px) * 0.5);
+    line-height: 1;
+    margin: 0 3px;
+    flex: 0 0 auto;
+  }
+  .stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f4fa;
+  }
+  canvas { display: block; touch-action: none; }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(20,20,40,.55);
+    color: #fff;
+    backdrop-filter: blur(2px);
+    text-align: center;
+    padding: 20px;
+    transition: opacity .2s;
+  }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .overlay h2 { margin: 0 0 6px; font-size: 26px; }
+  .overlay p { margin: 4px 0; font-size: 15px; opacity: .9; }
+  .overlay .final-score { font-size: 40px; font-weight: 800; margin: 8px 0; }
+  .btn {
+    margin-top: 16px;
+    padding: 12px 34px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #ff8a5c, #ff5e62);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(255,94,98,.45);
+  }
+  .btn:active { transform: scale(.96); }
+  .hint { font-size: 12px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="panel">
+    <header>
+      <div class="title">🍑 合成大陶文</div>
+      <div class="scores">
+        <div class="next-box">
+          <span class="label">下一个</span>
+          <div id="nextPreview" class="next-preview"><span class="next-emoji">🍒</span></div>
+        </div>
+        <div class="score-box">
+          <div class="label">得分</div>
+          <div class="value" id="score">0</div>
+        </div>
+        <div class="score-box">
+          <div class="label">最高</div>
+          <div class="value" id="best">0</div>
+        </div>
+      </div>
+    </header>
+    <div class="progression" id="progression"></div>
+    <div class="stage">
+      <canvas id="game"></canvas>
+      <div class="overlay" id="overlay">
+        <h2>游戏结束</h2>
+        <div class="final-score" id="finalScore">0</div>
+        <p id="bestLine">最高分 0</p>
+        <button class="btn" id="restartBtn">重新开始</button>
+      </div>
+    </div>
+  </div>
+  <div class="hint">点击 / 触摸屏幕放置水果，相同水果相撞会合成更高级的水果</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+   * 水果数据 —— 替换图片的核心位置
+   * ------------------------------------------------------------
+   * 想用图片代替 Emoji 时，只需要给对应层级的 `image` 字段
+   * 填上图片 URL / 路径（如 "assets/my-fruit.png"）即可，
+   * 渲染函数会自动优先绘制图片。物理和游戏逻辑完全不用改。
+   * 例：{ name:"樱桃", emoji:"🍒", image:"assets/cherry.png", r:18, score:1 }
+   * ============================================================ */
+  const FRUITS = [
+    { name: "樱桃", emoji: "🍒", image: null, r: 18,  score: 1 },
+    { name: "草莓", emoji: "🍓", image: null, r: 26,  score: 2 },
+    { name: "葡萄", emoji: "🍇", image: null, r: 35,  score: 4 },
+    { name: "柑橘", emoji: "🍊", image: null, r: 45,  score: 8 },
+    { name: "柿子", emoji: "🍅", image: null, r: 56,  score: 16 },
+    { name: "苹果", emoji: "🍎", image: null, r: 67,  score: 32 },
+    { name: "梨",   emoji: "🍐", image: null, r: 79,  score: 64 },
+    { name: "桃子", emoji: "🍑", image: null, r: 91,  score: 128 },
+    { name: "菠萝", emoji: "🍍", image: null, r: 104, score: 256 },
+    { name: "椰子", emoji: "🥥", image: null, r: 117, score: 512 },
+    { name: "西瓜", emoji: "🍉", image: null, r: 132, score: 1024 },
+  ];
+  const TOP_TIER = FRUITS.length - 1; // 西瓜不会继续合成
+
+  // 逻辑画布尺寸
+  const W = 400;
+  const H = 620;
+
+  // 物理参数
+  const G = 2000;          // 重力加速度 (px/s^2)
+  const WALL_E = 0.3;      // 墙壁弹性
+  const FRUIT_E = 0.25;    // 水果碰撞弹性
+  const FLOOR_FRICTION = 0.9;
+  const STEP_DT = 1 / 120; // 物理子步长
+  const MAX_SPEED = 2200;
+  const SLEEP_SPEED = 6;   // 低于该速度视为静止
+  const DANGER_Y = 40;     // 危险线：果实顶边越过此线并持续停留则判负（越小越靠上、越简单）
+
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const scoreEl = document.getElementById("score");
+  const bestEl = document.getElementById("best");
+  const nextPreviewEl = document.getElementById("nextPreview");
+  const progressionEl = document.getElementById("progression");
+  const overlay = document.getElementById("overlay");
+  const finalScoreEl = document.getElementById("finalScore");
+  const bestLineEl = document.getElementById("bestLine");
+  const restartBtn = document.getElementById("restartBtn");
+
+  let fruits = [];        // 在场果实
+  let pendingNew = [];    // 合成产生的新果实（下一轮并入）
+  let particles = [];     // 合成粒子特效
+  let score = 0;
+  let best = 0;
+  let nextTier = 0;
+  let pointerX = W / 2;
+  let gameOver = false;
+  let acc = 0;
+  let lastTime = performance.now();
+
+  // 读取最高分
+  try { best = parseInt(localStorage.getItem("suika_best") || "0", 10) || 0; } catch (e) { best = 0; }
+  bestEl.textContent = best;
+
+  function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+
+  /* ---------- 图片素材（替换 emoji）----------
+   * assets/fruit_00.png ... fruit_10.png 对应 11 个层级。
+   * 若某张图片缺失或加载失败，会自动回退到该层级的 emoji。
+   * -------------------------------------------- */
+  const IMG_DIR = "assets";
+  function fruitImagePath(tier) {
+    return IMG_DIR + "/fruit_" + String(tier).padStart(2, "0") + ".png";
+  }
+  function loadFruitImages(onReady) {
+    let pending = FRUITS.length;
+    FRUITS.forEach((data, tier) => {
+      const img = new Image();
+      const done = () => { pending--; if (pending === 0 && onReady) onReady(); };
+      img.onload = done;
+      img.onerror = done;
+      img.src = fruitImagePath(tier);
+      data.image = img;
+    });
+  }
+
+  /* 「下一个」预览：图片已加载则显示图片，否则显示 emoji */
+  function updateNextPreview() {
+    const data = FRUITS[nextTier];
+    const img = data.image;
+    if (img && img.complete && img.naturalWidth > 0) {
+      nextPreviewEl.innerHTML = '<img src="' + img.src + '" alt="">';
+    } else {
+      nextPreviewEl.innerHTML = '<span class="next-emoji">' + data.emoji + "</span>";
+    }
+  }
+
+  /* 层级递增示意：11 个水果横排，用箭头连接 */
+  function buildProgression() {
+    let html = "";
+    FRUITS.forEach((data, i) => {
+      const img = data.image;
+      const ready = img && img.complete && img.naturalWidth > 0;
+      html += ready
+        ? '<img class="pf-item" src="' + img.src + '" alt="">'
+        : '<span class="pf-item pf-emoji">' + data.emoji + "</span>";
+      if (i < FRUITS.length - 1) html += '<span class="pf-arrow">→</span>';
+    });
+    progressionEl.innerHTML = html;
+  }
+
+  function sizeProgression(panelWidth) {
+    const n = FRUITS.length;
+    const denom = n + 0.6 * (n - 1);
+    let item = Math.floor((panelWidth - 64) / denom);
+    item = Math.max(14, Math.min(32, item));
+    progressionEl.style.setProperty("--pf", item + "px");
+  }
+
+  /* ---------- 随机选取下一个水果层级 ---------- */
+  function randomTier() {
+    let maxOnBoard = 0;
+    for (const f of fruits) if (f.tier > maxOnBoard) maxOnBoard = f.tier;
+    // 最高允许生成到 4 级，并随场上最高级逐步放开
+    const cap = Math.min(4, maxOnBoard);
+    return Math.floor(Math.random() * (cap + 1));
+  }
+
+  /* ---------- 生成 / 放置 ---------- */
+  function spawnFruit(tier, x, y, vx, vy) {
+    return {
+      tier, x, y, vx: vx || 0, vy: vy || 0,
+      r: FRUITS[tier].r,
+      dead: false,
+      above: 0,   // 在危险线上方停留的时间
+    };
+  }
+
+  function drop(x) {
+    if (gameOver) return;
+    const r = FRUITS[nextTier].r;
+    const jitter = (Math.random() - 0.5) * 40;
+    const fx = clamp(x + jitter, r + 2, W - r - 2);
+    fruits.push(spawnFruit(nextTier, fx, r + 2, 0, 60));
+    nextTier = randomTier();
+    updateNextPreview();
+  }
+
+  /* ---------- 合成 ---------- */
+  function merge(a, b) {
+    a.dead = true;
+    b.dead = true;
+    const tier = a.tier + 1;
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    const nf = spawnFruit(tier, mx, my, (a.vx + b.vx) / 2, -140);
+    pendingNew.push(nf);
+    score += FRUITS[a.tier].score;
+    spawnMergeEffect(mx, my, tier);
+  }
+
+  function spawnMergeEffect(x, y, tier) {
+    const color = ["#ffd166", "#ff8a5c", "#ff5e62", "#c7f464"][tier % 4];
+    for (let i = 0; i < 10; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const sp = 60 + Math.random() * 180;
+      particles.push({
+        x, y,
+        vx: Math.cos(ang) * sp,
+        vy: Math.sin(ang) * sp - 60,
+        life: 1,
+        r: 2 + Math.random() * 4,
+        color,
+      });
+    }
+  }
+
+  /* ---------- 墙壁碰撞 ---------- */
+  function resolveWall(f) {
+    if (f.x - f.r < 0) { f.x = f.r; f.vx = Math.abs(f.vx) * WALL_E; }
+    else if (f.x + f.r > W) { f.x = W - f.r; f.vx = -Math.abs(f.vx) * WALL_E; }
+    if (f.y + f.r > H) {
+      f.y = H - f.r;
+      f.vy = -Math.abs(f.vy) * WALL_E;
+      f.vx *= FLOOR_FRICTION;
+    }
+    // 顶部开放（水果可略高于顶边以便触发结束判定），但限制不要飞出太远
+    if (f.y - f.r < -80) { f.y = -80 + f.r; f.vy = Math.abs(f.vy) * 0.2; }
+  }
+
+  /* ---------- 果实间碰撞（非合成，仅物理分离与反弹） ---------- */
+  function resolveCollision(a, b) {
+    let dx = b.x - a.x, dy = b.y - a.y;
+    let d = Math.hypot(dx, dy);
+    const md = a.r + b.r;
+    if (d >= md) return;
+    let nx, ny;
+    if (d < 1e-4) {
+      const ang = Math.random() * Math.PI * 2;
+      nx = Math.cos(ang); ny = Math.sin(ang); d = 1e-4;
+    } else {
+      nx = dx / d; ny = dy / d;
+    }
+    // 质量按面积近似
+    const ma = a.r * a.r, mb = b.r * b.r;
+    const total = ma + mb;
+    // 位置校正
+    const overlap = md - d;
+    a.x -= nx * overlap * (mb / total);
+    a.y -= ny * overlap * (mb / total);
+    b.x += nx * overlap * (ma / total);
+    b.y += ny * overlap * (ma / total);
+    // 冲量
+    const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
+    const vn = rvx * nx + rvy * ny;
+    if (vn < 0) {
+      const invSum = 1 / ma + 1 / mb;
+      const j = -(1 + FRUIT_E) * vn / invSum;
+      a.vx -= j * nx / ma; a.vy -= j * ny / ma;
+      b.vx += j * nx / mb; b.vy += j * ny / mb;
+    }
+  }
+
+  /* ---------- 物理子步 ---------- */
+  function physicsStep(dt) {
+    // 重力 + 积分
+    for (const f of fruits) {
+      f.vy += G * dt;
+      f.vy = clamp(f.vy, -MAX_SPEED, MAX_SPEED);
+      f.vx = clamp(f.vx, -MAX_SPEED, MAX_SPEED);
+      f.x += f.vx * dt;
+      f.y += f.vy * dt;
+    }
+    for (const f of fruits) resolveWall(f);
+
+    // 碰撞 + 合成，多轮迭代处理级联合成
+    for (let pass = 0; pass < 10; pass++) {
+      let merged = false;
+      const n = fruits.length;
+      for (let i = 0; i < n; i++) {
+        const a = fruits[i];
+        if (a.dead) continue;
+        for (let j = i + 1; j < n; j++) {
+          const b = fruits[j];
+          if (b.dead) continue;
+          if (a.tier !== b.tier || a.tier >= TOP_TIER) continue;
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const d2 = dx * dx + dy * dy;
+          // 接触即合成：阈值取「半径和 + 0.5px」。
+          // 之前用 0.9 倍要求重叠 10%，但碰撞分离会把水果推开到刚好接触（距离=半径和），
+          // 导致卡在「接触但不重叠」永远无法合成。
+          const md = (a.r + b.r) + 0.5;
+          if (d2 < md * md) {
+            merge(a, b);
+            merged = true;
+          }
+        }
+      }
+      if (merged) {
+        fruits = fruits.filter(f => !f.dead);
+        fruits.push(...pendingNew);
+        pendingNew = [];
+        continue; // 重新扫描，处理级联合成
+      }
+      // 无合成时，多轮处理剩余重叠的物理分离，提升堆积稳定性
+      for (let iter = 0; iter < 3; iter++) {
+        for (let i = 0; i < fruits.length; i++) {
+          const a = fruits[i];
+          for (let j = i + 1; j < fruits.length; j++) {
+            resolveCollision(a, fruits[j]);
+          }
+        }
+      }
+      break;
+    }
+
+    // 关键：碰撞位置校正可能把水果推出边界，最后再钳制一次，防止沉底 / 飞出
+    for (const f of fruits) resolveWall(f);
+
+    // 静止微调，避免永动抖动
+    for (const f of fruits) {
+      const sp = Math.hypot(f.vx, f.vy);
+      if (sp < SLEEP_SPEED) { f.vx = 0; f.vy = 0; }
+    }
+  }
+
+  /* ---------- 渲染 ---------- */
+  // 统一绘制：优先画圆形头像图片，未加载则回退 emoji
+  function drawFruitIcon(x, y, r, tier, alpha) {
+    const data = FRUITS[tier];
+    const img = data.image;
+    ctx.save();
+    if (alpha != null) ctx.globalAlpha = alpha;
+    if (img && img.complete && img.naturalWidth > 0) {
+      ctx.drawImage(img, x - r, y - r, r * 2, r * 2);
+    } else {
+      ctx.font = `${Math.floor(r * 1.7)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(data.emoji, x, y + r * 0.05);
+    }
+    ctx.restore();
+  }
+
+  function drawFruit(f) {
+    // 阴影
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.ellipse(f.x + 3, f.y + f.r * 0.7, f.r * 0.85, f.r * 0.28, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    drawFruitIcon(f.x, f.y, f.r, f.tier, null);
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function render() {
+    // 背景
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#f7f7fc");
+    bg.addColorStop(1, "#e9e9f4");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // 危险线
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,94,98,.5)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(0, DANGER_Y);
+    ctx.lineTo(W, DANGER_Y);
+    ctx.stroke();
+    ctx.restore();
+
+    for (const f of fruits) drawFruit(f);
+    drawParticles();
+
+    // 下落预览（幽灵水果）
+    if (!gameOver && pointerX !== null) {
+      const r = FRUITS[nextTier].r;
+      const gx = clamp(pointerX, r + 2, W - r - 2);
+      drawFruitIcon(gx, r + 4, r, nextTier, 0.35);
+    }
+  }
+
+  /* ---------- 粒子更新 ---------- */
+  function updateParticles(dt) {
+    for (const p of particles) {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 400 * dt;
+      p.life -= dt * 2.2;
+    }
+    particles = particles.filter(p => p.life > 0);
+  }
+
+  /* ---------- 结束判定 ---------- */
+  function updateGameOver(dt) {
+    if (gameOver) return;
+    for (const f of fruits) {
+      // 只要果实「顶边」持续越过危险线（被堆满的果堆托住），累计时间。
+      // 用顶边而非中心点判断：大水果（如西瓜）顶边已越界时中心点仍在下方，用中心点会漏判。
+      if (f.y - f.r < DANGER_Y) {
+        f.above += dt;
+        if (f.above > 1.5) { doGameOver(); return; }
+      } else {
+        f.above = 0;
+      }
+    }
+  }
+
+  function doGameOver() {
+    gameOver = true;
+    if (score > best) {
+      best = score;
+      try { localStorage.setItem("suika_best", String(best)); } catch (e) {}
+      bestEl.textContent = best;
+    }
+    finalScoreEl.textContent = score;
+    bestLineEl.textContent = "最高分 " + best;
+    overlay.classList.remove("hidden");
+  }
+
+  function restart() {
+    fruits = [];
+    pendingNew = [];
+    particles = [];
+    score = 0;
+    scoreEl.textContent = "0";
+    nextTier = randomTier();
+    updateNextPreview();
+    gameOver = false;
+    acc = 0;
+    overlay.classList.add("hidden");
+  }
+
+  /* ---------- 主循环 ---------- */
+  function loop(t) {
+    let dt = (t - lastTime) / 1000;
+    lastTime = t;
+    if (dt > 0.05) dt = 0.05; // 防止切后台后跳帧
+
+    if (!gameOver) {
+      acc += dt;
+      while (acc >= STEP_DT) {
+        physicsStep(STEP_DT);
+        acc -= STEP_DT;
+      }
+      updateGameOver(dt);
+    }
+    updateParticles(dt);
+
+    scoreEl.textContent = score;
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- 输入 ---------- */
+  function getLogicalX(clientX) {
+    const rect = canvas.getBoundingClientRect();
+    return clamp((clientX - rect.left) / rect.width * W, FRUITS[0].r + 2, W - FRUITS[0].r - 2);
+  }
+
+  canvas.addEventListener("pointermove", (e) => {
+    pointerX = getLogicalX(e.clientX);
+  });
+  canvas.addEventListener("pointerdown", (e) => {
+    pointerX = getLogicalX(e.clientX);
+    drop(pointerX);
+  });
+
+  restartBtn.addEventListener("click", restart);
+  restartBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
+
+  /* ---------- 响应式尺寸 ---------- */
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const panel = document.querySelector(".panel");
+    const headerH = document.querySelector("header").offsetHeight;
+    const hintH = document.querySelector(".hint").offsetHeight;
+
+    // 可用空间必须扣掉页头、底部提示和间距，否则游戏底部（地板）会被裁掉
+    const availW = window.innerWidth - 24;
+    sizeProgression(availW);
+    const progH = progressionEl.offsetHeight;
+
+    const availH = window.innerHeight - headerH - hintH - progH - 40;
+    const scale = Math.max(0.3, Math.min(availW / W, availH / H, 1.6));
+    const dispW = Math.floor(W * scale);
+    const dispH = Math.floor(H * scale);
+
+    canvas.style.width = dispW + "px";
+    canvas.style.height = dispH + "px";
+    panel.style.width = dispW + "px";
+    sizeProgression(dispW);
+
+    // 内部分辨率按实际显示尺寸 × dpr，保证高清且逻辑坐标精确对应
+    const k = scale * dpr;
+    canvas.width = Math.round(W * k);
+    canvas.height = Math.round(H * k);
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+  }
+  window.addEventListener("resize", resize);
+
+  /* ---------- 启动 ---------- */
+  restart();
+  buildProgression();
+  resize();
+  // 预加载圆形头像图片；加载完成后刷新「下一个」预览与层级示意（游戏无需等待，先以 emoji 兜底）
+  loadFruitImages(function () { updateNextPreview(); buildProgression(); });
+  requestAnimationFrame(loop);
+})();
+
+// 注册 Service Worker（仅 HTTPS / localhost 生效，用于离线与「添加到主屏幕」安装）
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
