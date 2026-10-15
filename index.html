@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>合成大陶文</title>
 <meta name="theme-color" content="#1a1a3a">
 <link rel="manifest" href="manifest.json">
@@ -29,17 +29,20 @@
     background: linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%);
     color: var(--ink);
     overflow: hidden;
+    overscroll-behavior: none;
     user-select: none;
     -webkit-user-select: none;
   }
   #app {
-    height: 100%;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 12px;
-    padding: 12px;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   }
   .panel {
     background: var(--panel);
@@ -651,16 +654,24 @@
   /* ---------- 响应式尺寸 ---------- */
   function resize() {
     const dpr = window.devicePixelRatio || 1;
+    const appEl = document.getElementById("app");
     const panel = document.querySelector(".panel");
     const headerH = document.querySelector("header").offsetHeight;
     const hintH = document.querySelector(".hint").offsetHeight;
 
-    // 可用空间必须扣掉页头、底部提示和间距，否则游戏底部（地板）会被裁掉
-    const availW = window.innerWidth - 24;
+    // 以 #app 实际渲染尺寸为准：它已包含动态视口高度(100dvh)与安全区，避免底部被裁
+    const cs = getComputedStyle(appEl);
+    const padL = parseFloat(cs.paddingLeft) || 0;
+    const padR = parseFloat(cs.paddingRight) || 0;
+    const padT = parseFloat(cs.paddingTop) || 0;
+    const padB = parseFloat(cs.paddingBottom) || 0;
+    const gap = parseFloat(cs.rowGap) || 12;
+
+    const availW = appEl.clientWidth - padL - padR;
     sizeProgression(availW);
     const progH = progressionEl.offsetHeight;
 
-    const availH = window.innerHeight - headerH - hintH - progH - 40;
+    const availH = appEl.clientHeight - padT - padB - hintH - gap - headerH - progH;
     const scale = Math.max(0.3, Math.min(availW / W, availH / H, 1.6));
     const dispW = Math.floor(W * scale);
     const dispH = Math.floor(H * scale);
@@ -677,6 +688,14 @@
     ctx.setTransform(k, 0, 0, k, 0, 0);
   }
   window.addEventListener("resize", resize);
+  window.addEventListener("orientationchange", function () { setTimeout(resize, 250); });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", resize);
+  }
+  window.addEventListener("load", function () { resize(); setTimeout(resize, 300); });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { resize(); });
+  }
 
   /* ---------- 启动 ---------- */
   restart();
