@@ -29,8 +29,9 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
+  const opts = e.request.mode === "navigate" ? { cache: "no-store" } : undefined;
   e.respondWith(
-    fetch(e.request).then((resp) => {
+    fetch(e.request, opts).then((resp) => {
       if (resp && resp.status === 200 && resp.type === "basic") {
         const copy = resp.clone();
         caches.open(CACHE).then((c) => c.put(e.request, copy));

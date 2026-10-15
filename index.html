@@ -687,10 +687,19 @@
   requestAnimationFrame(loop);
 })();
 
-// 注册 Service Worker（仅 HTTPS / localhost 生效，用于离线与「添加到主屏幕」安装）
+// 注册 Service Worker；发现新版本后自动接管并刷新一次，避免访客停留在旧缓存
 if ("serviceWorker" in navigator) {
+  var hadController = !!navigator.serviceWorker.controller;
+  var swReloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", function () {
+    if (!hadController || swReloaded) return;
+    swReloaded = true;
+    location.reload();
+  });
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js").catch(function () {});
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(function (reg) {
+      reg.update();
+    }).catch(function () {});
   });
 }
 </script>
