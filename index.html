@@ -319,6 +319,7 @@
   let score = 0;
   let best = 0;
   let nextTier = 0;
+  let nextNextTier = 0;
   let pointerX = W / 2;
   let gameOver = false;
   let acc = 0;
@@ -361,9 +362,9 @@
     });
   }
 
-  /* 「下一个」预览：图片已加载则显示图片，否则显示 emoji */
+  /* 「下一个」预览：显示队列中的第二个（当前悬浮待投放的为第一个） */
   function updateNextPreview() {
-    const data = FRUITS[nextTier];
+    const data = FRUITS[nextNextTier];
     const img = data.image;
     if (img && img.complete && img.naturalWidth > 0) {
       nextPreviewEl.innerHTML = '<img src="' + img.src + '" alt="">';
@@ -415,11 +416,13 @@
 
   function drop(x) {
     if (gameOver) return;
-    const r = FRUITS[nextTier].r;
+    const tier = nextTier;
+    const r = FRUITS[tier].r;
     const jitter = (Math.random() - 0.5) * 40;
     const fx = clamp(x + jitter, r + 2, W - r - 2);
-    fruits.push(spawnFruit(nextTier, fx, r + 2, 0, 60));
-    nextTier = randomTier();
+    fruits.push(spawnFruit(tier, fx, r + 2, 0, 60));
+    nextTier = nextNextTier;
+    nextNextTier = randomTier();
     updateNextPreview();
   }
 
@@ -682,6 +685,7 @@
     score = 0;
     scoreEl.textContent = "0";
     nextTier = randomTier();
+    nextNextTier = randomTier();
     updateNextPreview();
     gameOver = false;
     acc = 0;
