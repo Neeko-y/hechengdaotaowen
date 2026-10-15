@@ -58,18 +58,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 10px 12px;
     border-bottom: 1px solid #eee;
-    gap: 12px;
+    gap: 8px;
   }
   .title {
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: .5px;
+    letter-spacing: .3px;
+    white-space: nowrap;
+    cursor: pointer;
+    flex: 0 0 auto;
   }
-  .scores { display: flex; align-items: center; gap: 14px; }
+  .scores { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
   .score-box { text-align: right; }
-  .score-box .label { font-size: 11px; color: var(--muted); }
+  .score-box .label { font-size: 11px; color: var(--muted); white-space: nowrap; }
   .score-box .value { font-size: 18px; font-weight: 700; color: var(--accent); }
   .next-box {
     display: flex;
@@ -78,7 +81,7 @@
     justify-content: center;
     min-width: 58px;
   }
-  .next-box .label { font-size: 11px; color: var(--muted); }
+  .next-box .label { font-size: 11px; color: var(--muted); white-space: nowrap; }
   .next-preview {
     margin-top: 2px;
     width: 32px; height: 32px;
@@ -157,13 +160,6 @@
   }
   .btn:active { transform: scale(.96); }
   .hint { font-size: 12px; color: var(--muted); text-align: center; }
-  .icon-btn {
-    width: 34px; height: 34px; padding: 0; flex: 0 0 auto;
-    border: none; border-radius: 10px; background: #f0f0f7;
-    font-size: 18px; line-height: 1; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .icon-btn:active { transform: scale(.94); }
   .submit-area {
     width: 100%; max-width: 280px; margin-top: 14px;
     display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -214,9 +210,8 @@
 <div id="app">
   <div class="panel">
     <header>
-      <div class="title">🍑 合成大陶文</div>
+      <div class="title" id="lbBtn" role="button" tabindex="0" title="查看排行榜">🏆 合成大陶文</div>
       <div class="scores">
-        <button class="icon-btn" id="lbBtn" title="排行榜" aria-label="排行榜">🏆</button>
         <div class="next-box">
           <span class="label">下一个</span>
           <div id="nextPreview" class="next-preview"><span class="next-emoji">🍒</span></div>
