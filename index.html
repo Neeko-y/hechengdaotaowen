@@ -157,6 +157,57 @@
   }
   .btn:active { transform: scale(.96); }
   .hint { font-size: 12px; color: var(--muted); text-align: center; }
+  .icon-btn {
+    width: 34px; height: 34px; padding: 0; flex: 0 0 auto;
+    border: none; border-radius: 10px; background: #f0f0f7;
+    font-size: 18px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:active { transform: scale(.94); }
+  .submit-area {
+    width: 100%; max-width: 280px; margin-top: 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .name-input {
+    width: 100%; padding: 10px 14px; font-size: 15px; text-align: center;
+    border: 1px solid rgba(255,255,255,.55); border-radius: 999px;
+    background: rgba(255,255,255,.95); color: #2b2b3a; outline: none;
+  }
+  .submit-area .btn { margin-top: 0; padding: 10px 26px; font-size: 15px; }
+  .btn-ghost { background: rgba(255,255,255,.2); box-shadow: none; }
+  .btn:disabled { opacity: .6; }
+  .submit-msg { min-height: 16px; margin: 0; font-size: 12px; opacity: .95; }
+  .modal {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(20,20,40,.6); backdrop-filter: blur(2px); padding: 20px;
+  }
+  .modal.hidden { display: none; }
+  .modal-card {
+    width: 100%; max-width: 360px; max-height: 80vh;
+    background: #fff; border-radius: 18px; overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-bottom: 1px solid #eee;
+    font-weight: 700; font-size: 17px;
+  }
+  .modal-close {
+    width: 30px; height: 30px; border: none; border-radius: 8px;
+    background: #f0f0f7; color: #666; font-size: 15px; cursor: pointer;
+  }
+  .lb-list { overflow-y: auto; padding: 6px 0; }
+  .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; font-size: 15px; }
+  .lb-row.me { background: #fff5f0; }
+  .lb-rank { width: 28px; text-align: center; font-weight: 700; color: #b9b9cc; flex: 0 0 auto; }
+  .lb-rank.top1 { color: #ffb300; }
+  .lb-rank.top2 { color: #9aa4b2; }
+  .lb-rank.top3 { color: #cd7f32; }
+  .lb-name { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-score { font-weight: 700; color: var(--accent); flex: 0 0 auto; }
+  .lb-empty { padding: 30px 16px; text-align: center; color: #999; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -165,6 +216,7 @@
     <header>
       <div class="title">🍑 合成大陶文</div>
       <div class="scores">
+        <button class="icon-btn" id="lbBtn" title="排行榜" aria-label="排行榜">🏆</button>
         <div class="next-box">
           <span class="label">下一个</span>
           <div id="nextPreview" class="next-preview"><span class="next-emoji">🍒</span></div>
@@ -186,11 +238,25 @@
         <h2>游戏结束</h2>
         <div class="final-score" id="finalScore">0</div>
         <p id="bestLine">最高分 0</p>
-        <button class="btn" id="restartBtn">重新开始</button>
+        <div class="submit-area">
+          <input id="nameInput" class="name-input" maxlength="12" placeholder="输入昵称，参与排行榜" autocomplete="off">
+          <button class="btn" id="submitBtn">提交到排行榜</button>
+          <p class="submit-msg" id="submitMsg"></p>
+        </div>
+        <button class="btn btn-ghost" id="restartBtn">重新开始</button>
       </div>
     </div>
   </div>
   <div class="hint">点击/触摸屏幕投放员工，相同的员工会合成更大的员工，来合成陶文吧！</div>
+  <div class="modal hidden" id="lbModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span>🏆 排行榜</span>
+        <button class="modal-close" id="lbClose" aria-label="关闭">✕</button>
+      </div>
+      <div class="lb-list" id="lbList"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -244,6 +310,13 @@
   const finalScoreEl = document.getElementById("finalScore");
   const bestLineEl = document.getElementById("bestLine");
   const restartBtn = document.getElementById("restartBtn");
+  const lbBtn = document.getElementById("lbBtn");
+  const lbModal = document.getElementById("lbModal");
+  const lbClose = document.getElementById("lbClose");
+  const lbListEl = document.getElementById("lbList");
+  const nameInputEl = document.getElementById("nameInput");
+  const submitBtn = document.getElementById("submitBtn");
+  const submitMsgEl = document.getElementById("submitMsg");
 
   let fruits = [];        // 在场果实
   let pendingNew = [];    // 合成产生的新果实（下一轮并入）
@@ -600,6 +673,10 @@
     }
     finalScoreEl.textContent = score;
     bestLineEl.textContent = "最高分 " + best;
+    nameInputEl.value = getPlayerName();
+    submitMsgEl.textContent = "";
+    submitBtn.disabled = false;
+    submitBtn.textContent = "提交到排行榜";
     overlay.classList.remove("hidden");
   }
 
@@ -615,6 +692,126 @@
     acc = 0;
     overlay.classList.add("hidden");
   }
+
+  /* ---------- 排行榜（npoint.io 免注册后端）---------- */
+  const LB_URL = "https://api.npoint.io/185a063ec1ec8a38a5f7";
+  const LB_MAX = 50;
+  const LB_SHOW = 20;
+
+  function getPlayerId() {
+    let id = "";
+    try { id = localStorage.getItem("suika_pid") || ""; } catch (e) {}
+    if (!id) {
+      id = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      try { localStorage.setItem("suika_pid", id); } catch (e) {}
+    }
+    return id;
+  }
+  function getPlayerName() {
+    try { return localStorage.getItem("suika_name") || ""; } catch (e) { return ""; }
+  }
+  function setPlayerName(n) {
+    try { localStorage.setItem("suika_name", n); } catch (e) {}
+  }
+
+  function escapeHtml(s) {
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+    let out = "";
+    for (const ch of String(s)) out += map[ch] || ch;
+    return out;
+  }
+
+  async function lbFetch() {
+    const resp = await fetch(LB_URL + "?t=" + Date.now());
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const data = await resp.json();
+    return (data && Array.isArray(data.scores)) ? data.scores : [];
+  }
+
+  function lbNormalize(list) {
+    const map = new Map();
+    for (const e of list) {
+      if (!e || typeof e.score !== "number" || !isFinite(e.score)) continue;
+      const id = e.id || ("n:" + (e.name || "") + ":" + (e.t || ""));
+      const cur = map.get(id);
+      if (!cur || e.score > cur.score) {
+        map.set(id, {
+          id: id,
+          name: String(e.name || "玩家").slice(0, 12),
+          score: Math.max(0, Math.floor(e.score)),
+          t: e.t || 0
+        });
+      }
+    }
+    return Array.from(map.values()).sort(function (a, b) { return b.score - a.score; });
+  }
+
+  async function lbSubmit(name, score) {
+    const id = getPlayerId();
+    let list = [];
+    try { list = await lbFetch(); } catch (e) {}
+    list.push({ id: id, name: name, score: score, t: Date.now() });
+    const top = lbNormalize(list).slice(0, LB_MAX);
+    const resp = await fetch(LB_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scores: top })
+    });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    return top;
+  }
+
+  function renderLeaderboard(list) {
+    if (!list.length) {
+      lbListEl.innerHTML = '<div class="lb-empty">还没有人上榜，快来当第一个吧～</div>';
+      return;
+    }
+    const myId = getPlayerId();
+    let html = "";
+    list.slice(0, LB_SHOW).forEach(function (e, i) {
+      const rank = i + 1;
+      const rankCls = "lb-rank" + (rank <= 3 ? " top" + rank : "");
+      const meCls = (e.id === myId) ? " me" : "";
+      html += '<div class="lb-row' + meCls + '">'
+        + '<span class="' + rankCls + '">' + rank + "</span>"
+        + '<span class="lb-name">' + escapeHtml(e.name) + "</span>"
+        + '<span class="lb-score">' + e.score + "</span>"
+        + "</div>";
+    });
+    lbListEl.innerHTML = html;
+  }
+
+  function openLeaderboard() {
+    lbModal.classList.remove("hidden");
+    lbListEl.innerHTML = '<div class="lb-empty">加载中…</div>';
+    lbFetch().then(function (list) {
+      renderLeaderboard(lbNormalize(list));
+    }).catch(function () {
+      lbListEl.innerHTML = '<div class="lb-empty">加载失败，请检查网络后重试</div>';
+    });
+  }
+
+  lbBtn.addEventListener("click", openLeaderboard);
+  lbClose.addEventListener("click", function () { lbModal.classList.add("hidden"); });
+  lbModal.addEventListener("click", function (e) {
+    if (e.target === lbModal) lbModal.classList.add("hidden");
+  });
+
+  submitBtn.addEventListener("click", function () {
+    const name = (nameInputEl.value || "").trim().slice(0, 12);
+    if (!name) { submitMsgEl.textContent = "请先输入昵称"; return; }
+    if (score <= 0) { submitMsgEl.textContent = "分数为 0，先去玩一局吧"; return; }
+    setPlayerName(name);
+    submitBtn.disabled = true;
+    submitMsgEl.textContent = "提交中…";
+    lbSubmit(name, score).then(function () {
+      submitBtn.textContent = "已提交";
+      submitMsgEl.textContent = "✅ 已提交到排行榜";
+    }).catch(function () {
+      submitBtn.disabled = false;
+      submitMsgEl.textContent = "提交失败，请检查网络后重试";
+    });
+  });
 
   /* ---------- 主循环 ---------- */
   function loop(t) {
