@@ -13,8 +13,12 @@ function autoPlay(timeoutMs = 5000) {
       if (state.phase === 'over') { done = true; return resolve(state); }
       const a = state.awaiting;
       if (a?.kind === 'discard') {
-        const idx = state.players[0].hand.length - 1;
-        queueMicrotask(() => game.dispatch({ type: 'discard', index: idx }));
+        if (a.canHu) {
+          queueMicrotask(() => game.dispatch({ type: 'hu' }));
+        } else {
+          const idx = state.players[0].hand.length - 1;
+          queueMicrotask(() => game.dispatch({ type: 'discard', index: idx }));
+        }
       } else if (a?.kind === 'respond') {
         const o = a.options;
         const action = o.hu ? 'hu' : o.gang ? 'gang' : o.peng ? 'peng' : o.chi ? 'chi' : 'pass';

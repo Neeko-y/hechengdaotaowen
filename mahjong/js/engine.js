@@ -102,10 +102,7 @@ export function createEngine({ dealer = 0 } = {}) {
     if (!win && hasFourWhite(p.hand, p.melds)) {
       win = evaluateWin(p.hand, p.melds, null, { selfDraw: true });
     }
-    if (win && (win.patterns.includes('四白板') || win.patterns.includes('天胡') || win.patterns.includes('爆头'))) {
-      return finishWin(seat, win, { selfDraw: true });
-    }
-    state.awaiting = { seat, kind: 'discard', canHu: !!win, huPatterns: win ? win.patterns : [], gangs: addGangOptions(p) };
+    state.awaiting = { seat, kind: 'discard', canHu: !!win, win: win || null, huPatterns: win ? win.patterns : [], gangs: addGangOptions(p) };
     state.phase = 'awaiting';
     emit();
   }
@@ -278,8 +275,7 @@ export function createEngine({ dealer = 0 } = {}) {
     if (a.kind === 'discard') {
       if (action.type === 'discard') return doDiscard(seat, action.index);
       if (action.type === 'hu') {
-        const r = evaluateWin(state.players[seat].hand, state.players[seat].melds, null, { selfDraw: true, gangKai: state.gangKai });
-        if (r) return finishWin(seat, r, { selfDraw: true });
+        if (a.win) return finishWin(seat, a.win, { selfDraw: true });
         return;
       }
       if (action.type === 'gang') {
