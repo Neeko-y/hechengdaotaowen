@@ -3,7 +3,7 @@
 import { createWall, sortHand, sameTile, isWhite, tileLabel } from './tiles.js';
 import {
   evaluateWin, scoreWin, canPeng, canMingGang, canAnGang, canAddGang, canChi,
-  resolveDiscardWinners, hasFourWhite,
+  resolveDiscardWinners, hasFourWhite, isSpecialTing,
 } from './rules.js';
 
 export function createEngine({ dealer = 0 } = {}) {
@@ -92,12 +92,17 @@ export function createEngine({ dealer = 0 } = {}) {
     state.turn = seat;
     let win = null;
     if (draw || isFirst) {
-      win = evaluateWin(p.hand, p.melds, null, { selfDraw: true, isTianHu: isFirst, gangKai });
+      let boTou = false;
+      if (draw && state.drawn) {
+        const pre = p.hand.filter((t) => t.id !== state.drawn.id);
+        boTou = isSpecialTing(pre, p.melds);
+      }
+      win = evaluateWin(p.hand, p.melds, null, { selfDraw: true, isTianHu: isFirst, gangKai, boTou });
     }
     if (!win && hasFourWhite(p.hand, p.melds)) {
       win = evaluateWin(p.hand, p.melds, null, { selfDraw: true });
     }
-    if (win && (win.patterns.includes('四白板') || win.patterns.includes('天胡') || win.patterns.includes('特殊胡'))) {
+    if (win && (win.patterns.includes('四白板') || win.patterns.includes('天胡') || win.patterns.includes('爆头'))) {
       return finishWin(seat, win, { selfDraw: true });
     }
     state.awaiting = { seat, kind: 'discard', canHu: !!win, huPatterns: win ? win.patterns : [], gangs: addGangOptions(p) };

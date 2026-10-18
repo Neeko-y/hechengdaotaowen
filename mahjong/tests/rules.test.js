@@ -122,7 +122,7 @@ describe('十三不搭', () => {
   });
 });
 
-describe('四白板 / 特殊胡 / 特殊听牌', () => {
+describe('四白板 / 爆头 / 爆头听牌', () => {
   test('四白板：集齐即和，10/人', () => {
     const hand = P('7z7z7z7z1m2m3m4m5m6m1p2p3p5p');
     expect(hasFourWhite(hand, [])).toBe(true);
@@ -132,16 +132,19 @@ describe('四白板 / 特殊胡 / 特殊听牌', () => {
     expect(deltas).toEqual(selfDrawDeltas(10));
   });
 
-  test('特殊胡：4 面子 + 单白板作将，5/人（只能自摸）', () => {
-    const hand = P('1m2m3m4m5m6m1p2p3p7s8s9s7z5z');
-    const r = evaluateWin(hand, [], null, { selfDraw: true });
-    expect(r.patterns).toEqual(['特殊胡']);
+  test('爆头：4 面子 + 单白板作将，摸任意牌自摸 5/人', () => {
+    const pre = P('1m2m3m4m5m6m1p2p3p7s8s9s7z');
+    const drawn = P('5z')[0];
+    const hand = [...pre, drawn];
+    expect(isSpecialTing(pre, [])).toBe(true);
+    const r = evaluateWin(hand, [], drawn, { selfDraw: true, boTou: true });
+    expect(r.patterns).toEqual(['爆头']);
     const { deltas } = scoreWin(r, { selfDraw: true, winnerSeat: 0 });
     expect(deltas).toEqual(selfDrawDeltas(5));
-    expect(evaluateWin(hand, [], null, { selfDraw: false })).toBeNull();
+    expect(evaluateWin(hand, [], drawn, { selfDraw: false })).toBeNull();
   });
 
-  test('特殊听牌：4 面子 + 单白板', () => {
+  test('爆头听牌：4 面子 + 单白板', () => {
     const ting = P('1m2m3m4m5m6m1p2p3p7s8s9s7z'); // 13 张
     expect(isSpecialTing(ting, [])).toBe(true);
     expect(isTing(ting, [])).toBe(true);
@@ -192,7 +195,7 @@ describe('一炮多响裁决', () => {
   });
 });
 
-describe('赖子补低位顺子 / 特殊胡', () => {
+describe('赖子补低位顺子 / 爆头', () => {
   test('赖子可补在顺子低位（8m9m+白=7m8m9m）', () => {
     const hand = P('8m9m7z1m1m1m2p2p2p3s3s3s5z5z');
     const r = evaluateWin(hand, [], null, { selfDraw: true });
@@ -200,20 +203,34 @@ describe('赖子补低位顺子 / 特殊胡', () => {
     expect(r.baseSelfDraw).toBe(3);
   });
 
-  test('特殊胡：副露 + 白板作将（白板补面子）', () => {
+  test('爆头：副露 + 白板作将（白板补面子）', () => {
     const melds = [{ type: 'chi', tiles: P('5s6s7s') }];
-    const hand = P('4m4m8m9m7p8p9p7z7z7z3s');
-    const r = evaluateWin(hand, melds, null, { selfDraw: true });
+    const pre = P('4m4m8m9m7p8p9p7z7z7z');
+    const drawn = P('3s')[0];
+    const hand = [...pre, drawn];
+    expect(isSpecialTing(pre, melds)).toBe(true);
+    const r = evaluateWin(hand, melds, drawn, { selfDraw: true, boTou: true });
     expect(r).not.toBeNull();
-    expect(r.patterns).toEqual(['特殊胡']);
+    expect(r.patterns).toEqual(['爆头']);
     const { deltas } = scoreWin(r, { selfDraw: true, winnerSeat: 0 });
     expect(deltas).toEqual(selfDrawDeltas(5));
   });
 
-  test('特殊听牌：3 白板（白板补面子 + 1 白板作将）', () => {
+  test('爆头听牌：3 白板（白板补面子 + 1 白板作将）', () => {
     const melds = [{ type: 'chi', tiles: P('5s6s7s') }];
     const ting = P('4m4m8m9m7p8p9p7z7z7z');
     expect(isSpecialTing(ting, melds)).toBe(true);
     expect(isTing(ting, melds)).toBe(true);
+  });
+
+  test('单将听牌摸到白板 → 不算爆头（普通有白板自摸 3/人）', () => {
+    const pre = P('1m2m3m4m5m6m1p2p3p7s8s9s5z');
+    const drawn = P('7z')[0];
+    const hand = [...pre, drawn];
+    expect(isSpecialTing(pre, [])).toBe(false);
+    const r = evaluateWin(hand, [], drawn, { selfDraw: true, boTou: false });
+    expect(r).not.toBeNull();
+    expect(r.patterns).toEqual([]);
+    expect(r.baseSelfDraw).toBe(3);
   });
 });

@@ -151,24 +151,7 @@ export function isShisanBuDa(tiles) {
   return true;
 }
 
-/** 特殊胡：白板作将（将中含至少一张白板），其余（含剩余白板当赖子）成 4 - 副露数 个面子。 */
-function isSpecialWinHand(hand, melds) {
-  const needMelds = 4 - melds.length;
-  if (hand.length !== needMelds * 3 + 2) return false;
-  const whites = countWhite(hand);
-  if (whites === 0) return false;
-  const counts = toCounts(hand);
-  if (whites >= 2 && canFormMelds(counts.slice(), whites - 2, needMelds)) return true;
-  for (let i = 0; i < 34; i++) {
-    if (counts[i] === 0) continue;
-    const c = counts.slice();
-    c[i]--;
-    if (canFormMelds(c, whites - 1, needMelds)) return true;
-  }
-  return false;
-}
-
-/** 特殊听牌：手牌 = 4 - 副露数 个完整面子 + 单张白板作将，下次摸任意牌必自摸。 */
+/** 爆头听牌：手牌 = 4 - 副露数 个完整面子 + 单张白板作将，下次摸任意牌必自摸。 */
 export function isSpecialTing(hand, melds = []) {
   const needMelds = 4 - melds.length;
   if (hand.length !== needMelds * 3 + 1) return false;
@@ -191,7 +174,7 @@ export function hasFourWhite(hand, melds = []) {
  * @param {Array} hand   暗牌，**包含胡的那张**（自摸时已摸入手牌）
  * @param {Array} melds  副露：[{type:'chi'|'peng'|'minggang'|'angang'|'bugang', tiles:[]}]
  * @param {Object|null} winTile 胡的那张（引用，用于阅别；可为 null）
- * @param {{selfDraw?:boolean, isTianHu?:boolean, gangKai?:boolean}} ctx
+ * @param {{selfDraw?:boolean, isTianHu?:boolean, gangKai?:boolean, boTou?:boolean}} ctx
  * @returns {null | {patterns:string[], multipliers:number, settle:'self'|'dianpao'|'perEach',
  *   baseSelfDraw:number, baseDianpao:null|{dianpao:number,others:number},
  *   usesWildcard:boolean, hasWhite:boolean}}
@@ -237,11 +220,9 @@ export function evaluateWin(hand, melds = [], winTile = null, ctx = {}) {
   const wild = countWhite(hand);
   if (!canStandardWin(toCounts(hand), wild, needMelds)) return null;
 
-  // 特殊胡（4 面子 + 单白板作将）——只能自摸
-  if (isSpecialWinHand(hand, melds)) {
-    if (!selfDraw) return null;
+  if (selfDraw && ctx.boTou) {
     return {
-      patterns: ['特殊胡'], multipliers: 1, settle: 'perEach',
+      patterns: ['爆头'], multipliers: 1, settle: 'perEach',
       baseSelfDraw: 5, baseDianpao: null, usesWildcard: true, hasWhite: true,
     };
   }
