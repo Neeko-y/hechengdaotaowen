@@ -236,6 +236,7 @@ export function createEngine({ dealer = 0 } = {}) {
 
   function finishWin(seat, winResult, ctx) {
     const p = state.players[seat];
+    const winTile = ctx.selfDraw ? state.drawn : ctx.tile;
     if (!ctx.selfDraw && ctx.tile) {
       if (!p.hand.some((t) => t.id === ctx.tile.id)) p.hand.push(ctx.tile);
       p.hand = sortHand(p.hand);
@@ -252,7 +253,13 @@ export function createEngine({ dealer = 0 } = {}) {
     state.phase = 'over';
     state.awaiting = null;
     state.winnerSeat = seat;
-    state.result = { deltas, breakdown, patterns: r.patterns, selfDraw: !!ctx.selfDraw };
+    state.result = {
+      deltas, breakdown, patterns: r.patterns, selfDraw: !!ctx.selfDraw,
+      winSeat: seat,
+      winHand: p.hand.map((t) => ({ id: t.id, suit: t.suit, rank: t.rank })),
+      winMelds: p.melds.map((m) => ({ type: m.type, tiles: m.tiles.map((t) => ({ id: t.id, suit: t.suit, rank: t.rank })) })),
+      winTileId: winTile ? winTile.id : null,
+    };
     log(`${p.name} ${ctx.selfDraw ? '自摸' : '和牌'}：${breakdown}`);
     emit();
   }

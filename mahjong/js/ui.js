@@ -11,9 +11,9 @@ let session = null;
 let lastView = null;
 let openMelds = null;
 
-function face(t, small) {
+function face(t, small, extra = '') {
   const honor = t.suit !== 'z' ? '' : t.rank === 5 ? ' red' : t.rank === 6 ? ' green' : '';
-  const cls = `tile${small ? ' small' : ''}${isWhite(t) ? ' white' : ''} ${t.suit}${honor}`;
+  const cls = `tile${small ? ' small' : ''}${isWhite(t) ? ' white' : ''} ${t.suit}${honor}${extra ? ' ' + extra : ''}`;
   const inner = t.suit === 'z'
     ? `<span class="zh">${tileLabel(t)}</span>`
     : `<span class="num">${t.rank}</span><span class="suit">${SUIT_CHAR[t.suit]}</span>`;
@@ -87,7 +87,12 @@ function resultHtml(state) {
     .map((p) => `<div class="rrow"><span>${p.name}</span><span class="${(r.deltas?.[p.seat] ?? 0) >= 0 ? 'pos' : 'neg'}">${(r.deltas?.[p.seat] ?? 0) >= 0 ? '+' : ''}${r.deltas?.[p.seat] ?? 0}</span></div>`)
     .join('');
   const totals = `总分：${state.players.map((p) => `${p.name} ${p.score}`).join(' · ')}`;
-  return `<div class="modal"><div class="card"><h2>${title}</h2><p class="bd">${r.breakdown || ''}</p><div class="total">${totals}</div>${rows}<button data-act="restart" class="primary">再来一局</button></div></div>`;
+  const winHand = (!r.draw && r.winHand)
+    ? `<div class="winhand">${[...(r.winMelds || []).flatMap((m) => m.tiles || []), ...r.winHand]
+        .map((t) => face(t, true, t.id != null && t.id === r.winTileId ? 'win' : ''))
+        .join('')}</div>`
+    : '';
+  return `<div class="modal"><div class="card"><h2>${title}</h2><p class="bd">${r.breakdown || ''}</p>${winHand}<div class="total">${totals}</div>${rows}<button data-act="restart" class="primary">再来一局</button></div></div>`;
 }
 
 function renderTable(state) {

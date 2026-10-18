@@ -38,3 +38,11 @@ test('连打多局不崩溃', async () => {
     expect(s.phase).toBe('over');
   }
 }, 30000);
+
+test('结算包含获胜手牌与制胜张', async () => {
+  const s = await autoPlay();
+  if (!s.result.draw) {
+    expect(s.result.winSeat).toBeGreaterThanOrEqual(0);
+    expect(Array.isArray(s.result.winHand)).toBe(true);
+  }
+}, 15000);
