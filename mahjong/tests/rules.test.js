@@ -132,6 +132,17 @@ describe('十三不搭', () => {
     expect(isShisanBuDa([...pre, P('1m')[0]])).toBe(false);
     expect(evaluateWin([...pre, P('1s')[0]], [], null, { selfDraw: true })).toBeNull();
   });
+
+  test('十三不搭含白板（当普通字牌）也可以点炮胡', () => {
+    const hand = P('1m4m7m2p5p8p1s4s7s1z2z3z4z7z');
+    expect(isShisanBuDa(hand)).toBe(true);
+    const r = evaluateWin(hand, [], null, { selfDraw: false });
+    expect(r).not.toBeNull();
+    expect(r.patterns).toEqual(['十三不搭']);
+    expect(r.settle).toBe('dianpao');
+    const { deltas } = scoreWin(r, { selfDraw: false, winnerSeat: 0, discarderSeat: 2 });
+    expect(deltas).toEqual([8, -2, -4, -2]);
+  });
 });
 
 describe('四白板 / 爆头 / 爆头听牌', () => {

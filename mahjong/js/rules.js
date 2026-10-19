@@ -190,7 +190,6 @@ export function evaluateWin(hand, melds = [], winTile = null, ctx = {}) {
   // ② 无副露的整手牌型（白板当普通牌）
   if (melds.length === 0 && hand.length === 14) {
     if (isShisanBuDa(hand)) {
-      if (hasWhite && !selfDraw) return null; // 手里有白板只能自摸
       return {
         patterns: ['十三不搭'], multipliers: 1,
         settle: selfDraw ? 'self' : 'dianpao', baseSelfDraw: 6,
