@@ -104,7 +104,7 @@ describe('七对 / 豪华七对', () => {
 });
 
 describe('十三不搭', () => {
-  const hand = P('1m4m7m2p5p8p3s6s9s1z2z3z4z1z'); // 白板未出现；字牌互异 + 唯一对子
+  const hand = P('1m4m7m2p5p8p3s6s9s1z2z3z4z5z');
 
   test('识别 + 自摸 6/人', () => {
     expect(isShisanBuDa(hand)).toBe(true);
@@ -119,6 +119,18 @@ describe('十三不搭', () => {
     expect(r.settle).toBe('dianpao');
     const { deltas } = scoreWin(r, { selfDraw: false, winnerSeat: 0, discarderSeat: 3 });
     expect(deltas).toEqual([8, -2, -2, -4]);
+  });
+
+  test('听牌：147万 258筒 14条 东南西北中 → 听 789条/发/白；摸对子不算', () => {
+    const pre = P('1m4m7m2p5p8p1s4s1z2z3z4z5z');
+    for (const d of ['7s', '8s', '9s', '6z', '7z']) {
+      const r = evaluateWin([...pre, P(d)[0]], [], null, { selfDraw: true });
+      expect(r).not.toBeNull();
+      expect(r.patterns).toEqual(['十三不搭']);
+    }
+    expect(isShisanBuDa([...pre, P('1s')[0]])).toBe(false);
+    expect(isShisanBuDa([...pre, P('1m')[0]])).toBe(false);
+    expect(evaluateWin([...pre, P('1s')[0]], [], null, { selfDraw: true })).toBeNull();
   });
 });
 

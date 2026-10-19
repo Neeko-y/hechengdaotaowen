@@ -31,6 +31,23 @@ function discardsHtml(p) {
   return `<div class="discards">${p.discards.map((t) => face(t, true)).join('')}</div>`;
 }
 
+function renderSelfHand(hand, drawn) {
+  const drawnId = drawn ? drawn.id : null;
+  const rest = [];
+  let drawnEntry = null;
+  for (let i = 0; i < hand.length; i++) {
+    if (drawnId != null && hand[i].id === drawnId) drawnEntry = { t: hand[i], i };
+    else rest.push({ t: hand[i], i });
+  }
+  if (drawnEntry) rest.push(drawnEntry);
+  return `<div class="hand">${rest
+    .map(({ t, i }) => {
+      const isNew = drawnEntry != null && i === drawnEntry.i;
+      return `<div class="slot${isNew ? ' newgap' : ''}" data-idx="${i}">${face(t, false, isNew ? 'new' : '')}</div>`;
+    })
+    .join('')}</div>`;
+}
+
 function seatPanel(p, state) {
   const rel = ((p.seat - (state.you ?? 0)) + 4) % 4;
   const pos = SEAT_POS[rel];
@@ -41,9 +58,7 @@ function seatPanel(p, state) {
   const turnTag = active ? ' · <span class="turn">▶</span>' : '';
   if (isSelf) {
     const meta = `<div class="meta"><b>${p.name}</b>${dealerTag}${scoreTag}${turnTag}</div>`;
-    const hand = `<div class="hand">${(p.hand || [])
-      .map((t, i) => `<div class="slot" data-idx="${i}">${face(t)}</div>`)
-      .join('')}</div>`;
+    const hand = renderSelfHand(p.hand || [], state.drawn);
     return `<div class="seat ${pos} human ${active ? 'active' : ''}">${meta}${meldsHtml(p)}${hand}${discardsHtml(p)}</div>`;
   }
   const peek = p.melds.length ? ` <span class="peek">副露${p.melds.length}</span>` : '';
@@ -92,7 +107,16 @@ function resultHtml(state) {
         .map((t) => face(t, true, t.id != null && t.id === r.winTileId ? 'win' : ''))
         .join('')}</div>`
     : '';
-  return `<div class="modal"><div class="card"><h2>${title}</h2><p class="bd">${r.breakdown || ''}</p>${winHand}<div class="total">${totals}</div>${rows}<button data-act="restart" class="primary">再来一局</button></div></div>`;
+  const myReady = !!(state.ready && state.ready[state.you]);
+  const isHost = !!session && session.mode !== 'client';
+  const readyLine = state.players.map((p) => `${p.name}${state.ready?.[p.seat] ? ' ✓' : ' …'}`).join(' · ');
+  const readyBtn = myReady
+    ? '<span class="hint">已准备，等待其他玩家…</span>'
+    : '<button data-act="ready" class="primary">准备</button>';
+  const restartBtn = isHost
+    ? `<button data-act="restart"${state.allReady ? ' class="primary"' : ' disabled'}>${state.allReady ? '再来一局' : '等待全部准备'}</button>`
+    : '';
+  return `<div class="modal"><div class="card"><h2>${title}</h2><p class="bd">${r.breakdown || ''}</p>${winHand}<div class="total">${totals}</div>${rows}<div class="readyline">${readyLine}</div><div class="modal-actions">${readyBtn}${restartBtn}</div></div></div>`;
 }
 
 function renderTable(state) {
@@ -150,7 +174,9 @@ function renderClientStatus(v) {
     full: '房间已满',
     closed: '连接已断开',
   }[s] || (String(s).startsWith('error') ? '连接失败（' + String(s).slice(6) + '）' : '…');
-  root.innerHTML = `<div class="lobby"><h1>长兴麻将</h1><p class="status">${msg}</p><button data-lobby="back">返回</button></div>`;
+  const retry = String(s) === 'closed' || String(s).startsWith('error');
+  const retryBtn = retry ? '<button data-lobby="reconnect" class="primary">重连</button>' : '';
+  root.innerHTML = `<div class="lobby"><h1>长兴麻将</h1><p class="status">${msg}</p>${retryBtn}<button data-lobby="back">返回</button></div>`;
   bindLobby();
 }
 
@@ -184,6 +210,10 @@ function onLobby(act) {
     if (code) startSession(() => createClientSession({ code, name: '玩家' }));
   } else if (act === 'start') {
     session.start();
+  } else if (act === 'reconnect') {
+    if (session && session.code) {
+      startSession(() => createClientSession({ code: session.code, name: session.name || '玩家' }));
+    }
   } else if (act === 'back') {
     location.href = location.pathname;
   }
@@ -222,6 +252,7 @@ function bind(state) {
       else if (act === 'r-chi') session.dispatch({ type: 'respond', action: 'chi' });
       else if (act === 'r-pass') session.dispatch({ type: 'respond', action: 'pass' });
       else if (act === 'restart') session.dispatch({ type: 'restart' });
+      else if (act === 'ready') session.dispatch({ type: 'ready' });
       else if (act === 'lobby') location.href = location.pathname;
     });
   });

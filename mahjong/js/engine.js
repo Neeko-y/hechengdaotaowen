@@ -22,6 +22,7 @@ export function createEngine({ dealer = 0 } = {}) {
     awaiting: null,
     winnerSeat: null,
     result: null,
+    ready: [false, false, false, false],
     log: [],
   };
 
@@ -64,6 +65,7 @@ export function createEngine({ dealer = 0 } = {}) {
     state.winnerSeat = null;
     state.result = null;
     state.log = [];
+    state.ready = [false, false, false, false];
     for (const p of state.players) { p.hand = []; p.melds = []; p.discards = []; }
     for (let r = 0; r < 13; r++) for (let i = 0; i < 4; i++) state.players[i].hand.push(state.wall.pop());
     state.players[state.dealer].hand.push(state.wall.pop());
@@ -313,6 +315,8 @@ export function createEngine({ dealer = 0 } = {}) {
       awaiting: mine,
       winnerSeat: state.winnerSeat,
       result: state.result,
+      ready: state.ready.slice(),
+      allReady: state.ready.every(Boolean),
       players: state.players.map((p) => ({
         seat: p.seat,
         name: p.name,
@@ -329,7 +333,16 @@ export function createEngine({ dealer = 0 } = {}) {
     if (state.players[seat]) state.players[seat].name = name;
   }
 
+  function setReady(seat, val) {
+    if (seat < 0 || seat > 3) return;
+    state.ready[seat] = !!val;
+    emit();
+  }
+
   initPlayers();
 
-  return { dispatch, getState, getView, subscribe: (fn) => { listener = fn; }, setName, newRound: startRound, begin: startRound };
+  return {
+    dispatch, getState, getView, subscribe: (fn) => { listener = fn; }, setName, setReady,
+    newRound: startRound, begin: startRound,
+  };
 }

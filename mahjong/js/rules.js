@@ -128,18 +128,13 @@ export function isLuxurySevenPairs(tiles) {
 }
 
 /**
- * 十三不搭：14 张，字牌互不相同、数牌同花色内两两相差 >= 3（不能成搭），
- * 且至多一个对子。白板在此当普通字牌（SPEC §4.4，精确张数定义见 README TBD）。
+ * 十三不搭：14 张全部互不相同（不能成对），且同花色内两两相差 >= 3（不能成搭）。
+ * 白板在此当普通字牌。即必须再摸到一张“不搭”的牌才能成牌。
  */
 export function isShisanBuDa(tiles) {
   if (tiles.length !== 14) return false;
   const c = toCountsAll(tiles);
-  let pairs = 0;
-  for (let i = 0; i < 34; i++) {
-    if (c[i] > 2) return false;
-    if (c[i] === 2) pairs++;
-  }
-  if (pairs > 1) return false;
+  for (let i = 0; i < 34; i++) if (c[i] > 1) return false;
   for (const base of [0, 9, 18]) {
     for (let r = 0; r < 9; r++) {
       const a = base + r;

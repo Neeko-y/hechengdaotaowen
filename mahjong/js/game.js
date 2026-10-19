@@ -13,6 +13,9 @@ export function createGame(options = {}) {
   let uiListener = () => {};
 
   function onChange(state) {
+    if (state.phase === 'over') {
+      for (let s = 1; s < 4; s++) state.ready[s] = true;
+    }
     uiListener(engine.getView(0));
     const a = state.awaiting;
     if (!a || a.seat === 0) return;
@@ -31,7 +34,14 @@ export function createGame(options = {}) {
   return {
     mode: 'local',
     getState: () => engine.getView(0),
-    dispatch: (action) => (action.type === 'restart' ? engine.newRound() : engine.dispatch(0, action)),
+    dispatch: (action) => {
+      if (action.type === 'restart') {
+        if (engine.getState().ready.every(Boolean)) engine.newRound();
+        return;
+      }
+      if (action.type === 'ready') return engine.setReady(0, true);
+      return engine.dispatch(0, action);
+    },
     subscribe: (fn) => { uiListener = fn; fn(engine.getView(0)); },
     newRound: () => engine.newRound(),
   };

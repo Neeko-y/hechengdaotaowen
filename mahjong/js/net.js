@@ -11,12 +11,33 @@ function randomCode() {
   return s;
 }
 
+function randomToken() {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let s = '';
+  for (let i = 0; i < 16; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
+function loadToken(code) {
+  try { return localStorage.getItem('mj-token-' + code); } catch { return null; }
+}
+function saveToken(code, token) {
+  try {
+    localStorage.setItem('mj-token-' + code, token);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function createHostSession({ name = '房主', onRoom } = {}) {
   const engine = createEngine();
   engine.setName(0, name);
   const code = randomCode();
   const peer = new Peer(PREFIX + code);
   const conns = new Map();
+  const seatToken = [null, null, null, null];
+  const tokenSeat = new Map();
   let uiListener = () => {};
   let timer = null;
   let started = false;
@@ -37,6 +58,9 @@ export function createHostSession({ name = '房主', onRoom } = {}) {
   }
 
   function onChange(state) {
+    if (state.phase === 'over') {
+      for (let s = 1; s < 4; s++) if (!conns.has(s)) state.ready[s] = true;
+    }
     refresh();
     broadcast();
     const a = state.awaiting;
@@ -44,6 +68,7 @@ export function createHostSession({ name = '房主', onRoom } = {}) {
     clearTimeout(timer);
     const seat = a.seat;
     timer = setTimeout(() => {
+      if (conns.has(seat)) return;
       const cur = engine.getState().awaiting;
       if (!cur || cur.seat !== seat) return;
       engine.dispatch(seat, botAction(cur, engine.getState()));
@@ -58,7 +83,14 @@ export function createHostSession({ name = '房主', onRoom } = {}) {
   });
   peer.on('connection', (conn) => {
     conn.on('open', () => {
-      const seat = started ? null : firstFreeSeat();
+      const meta = conn.metadata || {};
+      const tok = typeof meta.token === 'string' ? meta.token : null;
+      let seat = null;
+      if (tok && tokenSeat.has(tok)) {
+        const s = tokenSeat.get(tok);
+        if (!conns.has(s)) seat = s;
+      }
+      if (seat == null && !started) seat = firstFreeSeat();
       if (seat == null) {
         conn.send({ type: 'full' });
         setTimeout(() => conn.close(), 300);
@@ -66,25 +98,37 @@ export function createHostSession({ name = '房主', onRoom } = {}) {
       }
       conn.__seat = seat;
       conns.set(seat, conn);
-      engine.setName(seat, (conn.metadata && conn.metadata.name) || FALLBACK_NAMES[seat]);
-      conn.send({ type: 'welcome', seat, code, started });
+      let token = seatToken[seat];
+      if (!token) {
+        token = randomToken();
+        seatToken[seat] = token;
+        tokenSeat.set(token, seat);
+      }
+      engine.setName(seat, meta.name || FALLBACK_NAMES[seat]);
+      conn.send({ type: 'welcome', seat, code, token, started });
       refresh();
       broadcast();
     });
     conn.on('data', (msg) => {
       if (!msg || conn.__seat == null) return;
       if (msg.type === 'action') {
-        if (msg.action && msg.action.type === 'restart') {
-          if (engine.getState().phase === 'over') engine.newRound();
+        const act = msg.action || {};
+        if (act.type === 'restart') {
+          if (conn.__seat === 0 && engine.getState().ready.every(Boolean)) engine.newRound();
+        } else if (act.type === 'ready') {
+          engine.setReady(conn.__seat, true);
         } else {
-          engine.dispatch(conn.__seat, msg.action);
+          engine.dispatch(conn.__seat, act);
         }
-      } else if (msg.type === 'name') { engine.setName(conn.__seat, msg.name); refresh(); broadcast(); }
+      } else if (msg.type === 'name') {
+        engine.setName(conn.__seat, msg.name);
+        refresh();
+        broadcast();
+      }
     });
     conn.on('close', () => {
       if (conn.__seat != null) {
         conns.delete(conn.__seat);
-        engine.setName(conn.__seat, FALLBACK_NAMES[conn.__seat]);
         refresh();
       }
     });
@@ -96,7 +140,14 @@ export function createHostSession({ name = '房主', onRoom } = {}) {
     get started() { return started; },
     playerCount: () => 1 + conns.size,
     getState: () => engine.getView(0),
-    dispatch: (action) => (action.type === 'restart' ? engine.newRound() : engine.dispatch(0, action)),
+    dispatch: (action) => {
+      if (action.type === 'restart') {
+        if (engine.getState().ready.every(Boolean)) engine.newRound();
+        return;
+      }
+      if (action.type === 'ready') return engine.setReady(0, true);
+      engine.dispatch(0, action);
+    },
     subscribe: (fn) => { uiListener = fn; fn(engine.getView(0)); },
     start: () => {
       if (started) return;
@@ -115,6 +166,7 @@ export function createClientSession({ code, name = '玩家' } = {}) {
   let listener = () => {};
   let mySeat = null;
   let status = 'connecting';
+  let token = loadToken(code);
 
   function snapshot() {
     return Object.assign({}, view || {}, { you: mySeat, status, mode: 'client' });
@@ -122,14 +174,26 @@ export function createClientSession({ code, name = '玩家' } = {}) {
   function push() { listener(snapshot()); }
 
   peer.on('open', () => {
-    conn = peer.connect(PREFIX + code, { metadata: { name }, reliable: true });
+    conn = peer.connect(PREFIX + code, { metadata: { name, token }, reliable: true });
     conn.on('open', () => { conn.send({ type: 'name', name }); });
     conn.on('data', (msg) => {
       if (!msg) return;
-      if (msg.type === 'welcome') { mySeat = msg.seat; status = msg.started ? 'playing' : 'waiting'; push(); }
-      else if (msg.type === 'view') { view = msg.view; if (status === 'waiting' && view.phase !== 'idle') status = 'playing'; push(); }
-      else if (msg.type === 'full') { status = 'full'; push(); }
-      else if (msg.type === 'error') { status = 'error:' + msg.message; push(); }
+      if (msg.type === 'welcome') {
+        mySeat = msg.seat;
+        if (msg.token) { token = msg.token; saveToken(code, token); }
+        status = msg.started ? 'playing' : 'waiting';
+        push();
+      } else if (msg.type === 'view') {
+        view = msg.view;
+        if (status === 'waiting' && view.phase !== 'idle') status = 'playing';
+        push();
+      } else if (msg.type === 'full') {
+        status = 'full';
+        push();
+      } else if (msg.type === 'error') {
+        status = 'error:' + msg.message;
+        push();
+      }
     });
     conn.on('close', () => { status = 'closed'; push(); });
   });
@@ -137,6 +201,8 @@ export function createClientSession({ code, name = '玩家' } = {}) {
 
   return {
     mode: 'client',
+    code,
+    name,
     get mySeat() { return mySeat; },
     get status() { return status; },
     getState: () => snapshot(),
