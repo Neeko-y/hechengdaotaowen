@@ -721,25 +721,47 @@
   }
 
   async function lbFetch() {
-    const resp = await fetch(LB_URL + "?t=" + Date.now());
+    const resp = await fetch(LB_URL + "?t=" + Date.now(), { cache: "no-store" });
     if (!resp.ok) throw new Error("HTTP " + resp.status);
     const data = await resp.json();
-    return (data && Array.isArray(data.scores)) ? data.scores : [];
+    if (!data || !Array.isArray(data.scores)) throw new Error("bad data");
+    return data.scores;
+  }
+
+  async function lbWrite(scores) {
+    const resp = await fetch(LB_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scores: scores })
+    });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+  }
+
+  const LB_MAX_SCORE = 30000;
+
+  function lbCleanName(name) {
+    const s = String(name == null ? "" : name).trim();
+    if (!s) return null;
+    if (Array.from(s).length > 12) return null;
+    for (const ch of s) {
+      const c = ch.codePointAt(0);
+      if (c < 32 || c === 127) return null;
+    }
+    return s;
   }
 
   function lbNormalize(list) {
     const map = new Map();
     for (const e of list) {
       if (!e || typeof e.score !== "number" || !isFinite(e.score)) continue;
-      const id = e.id || ("n:" + (e.name || "") + ":" + (e.t || ""));
+      const sc = Math.floor(e.score);
+      if (sc < 1 || sc > LB_MAX_SCORE) continue;
+      const name = lbCleanName(e.name);
+      if (!name) continue;
+      const id = e.id || ("n:" + name + ":" + (e.t || ""));
       const cur = map.get(id);
-      if (!cur || e.score > cur.score) {
-        map.set(id, {
-          id: id,
-          name: String(e.name || "玩家").slice(0, 12),
-          score: Math.max(0, Math.floor(e.score)),
-          t: e.t || 0
-        });
+      if (!cur || sc > cur.score) {
+        map.set(id, { id: id, name: name, score: sc, t: e.t || 0 });
       }
     }
     return Array.from(map.values()).sort(function (a, b) { return b.score - a.score; });
@@ -747,16 +769,31 @@
 
   async function lbSubmit(name, score) {
     const id = getPlayerId();
-    let list = [];
-    try { list = await lbFetch(); } catch (e) {}
-    list.push({ id: id, name: name, score: score, t: Date.now() });
-    const top = lbNormalize(list).slice(0, LB_MAX);
-    const resp = await fetch(LB_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ scores: top })
-    });
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const entry = { id: id, name: name, score: score, t: Date.now() };
+
+    let list;
+    try {
+      list = await lbFetch();
+    } catch (e) {
+      throw new Error("读取排行榜失败，已取消提交（未覆盖他人数据）");
+    }
+
+    let top = lbNormalize(list.concat([entry])).slice(0, LB_MAX);
+    try {
+      await lbWrite(top);
+    } catch (e) {
+      throw new Error("写入失败，请稍后重试");
+    }
+
+    try {
+      const after = await lbFetch();
+      const mine = lbNormalize(after).find(function (x) { return x.id === id; });
+      if (!mine || mine.score < score) {
+        top = lbNormalize(after.concat([{ id: id, name: name, score: score, t: Date.now() }])).slice(0, LB_MAX);
+        await lbWrite(top);
+      }
+    } catch (e) {}
+
     return top;
   }
 
@@ -806,9 +843,9 @@
     lbSubmit(name, score).then(function () {
       submitBtn.textContent = "已提交";
       submitMsgEl.textContent = "✅ 已提交到排行榜";
-    }).catch(function () {
+    }).catch(function (err) {
       submitBtn.disabled = false;
-      submitMsgEl.textContent = "提交失败，请检查网络后重试";
+      submitMsgEl.textContent = (err && err.message) ? err.message : "提交失败，请检查网络后重试";
     });
   });
 
