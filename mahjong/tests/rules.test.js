@@ -101,6 +101,15 @@ describe('七对 / 豪华七对', () => {
     const { deltas } = scoreWin(r, { selfDraw: true, winnerSeat: 0 });
     expect(deltas).toEqual(selfDrawDeltas(24));
   });
+
+  test('七对含白板也可点炮胡（×2 后：炮者 8、其余 4）', () => {
+    const r = evaluateWin(sevenPairs, [], null, { selfDraw: false });
+    expect(r).not.toBeNull();
+    expect(r.patterns).toEqual(['七对']);
+    expect(r.settle).toBe('dianpao');
+    const { deltas } = scoreWin(r, { selfDraw: false, winnerSeat: 0, discarderSeat: 2 });
+    expect(deltas).toEqual([16, -4, -8, -4]);
+  });
 });
 
 describe('十三不搭', () => {

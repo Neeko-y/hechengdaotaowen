@@ -198,7 +198,6 @@ export function evaluateWin(hand, melds = [], winTile = null, ctx = {}) {
     }
     if (isSevenPairs(hand)) {
       const luxury = isLuxurySevenPairs(hand);
-      if (hasWhite && !selfDraw) return null;
       return {
         patterns: luxury ? ['七对', '豪华七对'] : ['七对'],
         multipliers: luxury ? 4 : 2,
