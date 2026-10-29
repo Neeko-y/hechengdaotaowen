@@ -16,7 +16,8 @@
 (function () {
   try {
     var raw = localStorage.getItem('aidaoban.v1');
-    var t = raw ? (JSON.parse(raw).theme || 'dark') : 'dark';
+    var p0 = raw ? JSON.parse(raw) : null;
+    var t = p0 && (p0.version || 1) >= 2 ? (p0.theme || 'auto') : 'auto';
     if (t === 'auto') t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
   } catch (e) {
@@ -35,12 +36,12 @@ html[data-theme="dark"] {
   --line: rgba(232, 237, 244, .09);
   --line2: rgba(232, 237, 244, .17);
   --bar: rgba(11, 15, 20, .78);
-  --bai: #F5A524;    --bai-ink: #1A1206;
-  --zhong: #E5623C;  --zhong-ink: #1A0A05;
-  --ye: #5B7CFA;     --ye-ink: #0B1020;
-  --xiu1: #5C6B7F;   --xiu1-ink: #FFFFFF;
-  --xiu2: #48576B;   --xiu2-ink: #FFFFFF;
-  --nian: #2FB58C;   --nian-ink: #04140E;
+  --bai: #DCC095;    --bai-ink: #2A2318;
+  --zhong: #D6A28C;  --zhong-ink: #2B1E19;
+  --ye: #A1B0C6;     --ye-ink: #1A212B;
+  --xiu1: #B7B9BC;   --xiu1-ink: #242629;
+  --xiu2: #B3ABA2;   --xiu2-ink: #2A251F;
+  --nian: #A2BFAD;   --nian-ink: #1C2A23;
   --accent: #F5A524;
   --accent-ink: #1A1206;
   --danger: #F16A6A;
@@ -57,6 +58,12 @@ html[data-theme="light"] {
   --line: rgba(22, 32, 44, .10);
   --line2: rgba(22, 32, 44, .20);
   --bar: rgba(246, 247, 249, .82);
+  --bai: #C9A97A;    --bai-ink: #2B2419;
+  --zhong: #C08B76;  --zhong-ink: #2B1E19;
+  --ye: #8698AF;     --ye-ink: #141A23;
+  --xiu1: #A1A4A7;   --xiu1-ink: #232527;
+  --xiu2: #99938B;   --xiu2-ink: #26221D;
+  --nian: #8FAC9C;   --nian-ink: #17241E;
   --ring: rgba(191, 124, 8, .55);
   --shadow: 0 24px 60px -38px rgba(22, 32, 44, .35);
   color-scheme: light;
@@ -198,7 +205,7 @@ button { cursor: pointer; }
   height: 100%;
   width: 0;
   border-radius: 99px;
-  background: linear-gradient(90deg, var(--sc, var(--accent)) 0%, color-mix(in srgb, var(--sc, var(--accent)) 58%, #fff) 100%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--sc, var(--accent)) 82%, #000) 0%, var(--sc, var(--accent)) 100%);
   transition: width .5s cubic-bezier(.2, .8, .3, 1);
 }
 .now-next {
@@ -336,8 +343,9 @@ button { cursor: pointer; }
 .sh-zhong { background: var(--zhong); color: var(--zhong-ink); }
 .sh-ye { background: var(--ye); color: var(--ye-ink); }
 .sh-xiu1 { background: var(--xiu1); color: var(--xiu1-ink); }
-.sh-xiu2 { background: var(--xiu2); color: var(--xiu2-ink); border: 1px dashed rgba(255, 255, 255, .5); }
+.sh-xiu2 { background: var(--xiu2); color: var(--xiu2-ink); border: 1px dashed rgba(0, 0, 0, .26); }
 .sh-nian { background: var(--nian); color: var(--nian-ink); }
+html[data-theme="light"] .chip { box-shadow: inset 0 0 0 1px rgba(22, 32, 44, .10); }
 
 .legend {
   display: flex;
@@ -937,9 +945,9 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
   var WEEK_SHORT = ['日', '一', '二', '三', '四', '五', '六'];
 
   var DEFAULTS = {
-    version: 1,
+    version: 2,
     me: 0,
-    theme: 'dark',
+    theme: 'auto',
     view: 'month',
     remind: { enabled: false, leadMinutes: 90 },
     overrides: {},
@@ -981,15 +989,20 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
     var s = clone(DEFAULTS);
     try {
       var raw = localStorage.getItem(KEY);
-      if (raw) mergeDeep(s, JSON.parse(raw));
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        mergeDeep(s, parsed);
+        // v1 → v2：旧版本把深色写死成了默认值，这里迁移为跟随系统
+        if (!parsed.version || parsed.version < 2) s.theme = 'auto';
+      }
     } catch (e) { /* 用默认值 */ }
     return sanitize(s);
   }
 
   function sanitize(s) {
-    s.version = 1;
+    s.version = 2;
     s.me = (typeof s.me === 'number' && s.me >= 0 && s.me < 5) ? Math.floor(s.me) : 0;
-    s.theme = (s.theme === 'light' || s.theme === 'dark' || s.theme === 'auto') ? s.theme : 'dark';
+    s.theme = (s.theme === 'light' || s.theme === 'dark' || s.theme === 'auto') ? s.theme : 'auto';
     s.view = (s.view === 'year') ? 'year' : 'month';
     s.remind = isObj(s.remind) ? s.remind : { enabled: false, leadMinutes: 90 };
     s.remind.enabled = !!s.remind.enabled;
@@ -1067,19 +1080,19 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
   }
 
   function shiftSolid(k) {
-    if (k === '白') return '#F5A524';
-    if (k === '中') return '#E5623C';
-    if (k === '夜') return '#5B7CFA';
-    if (k === '年休') return '#2FB58C';
-    return '#5C6B7F';
+    var name = k === '白' ? '--bai' : k === '中' ? '--zhong' : k === '夜' ? '--ye'
+             : k === '年休' ? '--nian' : '--xiu1';
+    var v = '';
+    try { v = getComputedStyle(document.documentElement).getPropertyValue(name).trim(); } catch (e) { /* noop */ }
+    return v || '#8A8F94';
   }
 
   function shiftColor(k) {
-    if (k === '白') return 'rgba(245,165,36,.30)';
-    if (k === '中') return 'rgba(229,98,60,.28)';
-    if (k === '夜') return 'rgba(91,124,250,.32)';
-    if (k === '年休') return 'rgba(47,181,140,.28)';
-    return 'rgba(92,107,127,.22)';
+    if (k === '白') return 'rgba(220,192,149,.30)';
+    if (k === '中') return 'rgba(214,162,140,.28)';
+    if (k === '夜') return 'rgba(161,176,198,.32)';
+    if (k === '年休') return 'rgba(162,191,173,.28)';
+    return 'rgba(183,185,188,.22)';
   }
 
   function effective(y, m, d, team) {
@@ -1895,6 +1908,7 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
       save();
       applyTheme();
       syncSettings();
+      renderAll();
     }
   });
 
@@ -2076,7 +2090,7 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
   /* theme follow system */
   if (window.matchMedia) {
     var mq = window.matchMedia('(prefers-color-scheme: light)');
-    var onScheme = function () { if (state.theme === 'auto') applyTheme(); };
+    var onScheme = function () { if (state.theme === 'auto') { applyTheme(); renderAll(); } };
     if (mq.addEventListener) mq.addEventListener('change', onScheme);
     else if (mq.addListener) mq.addListener(onScheme);
   }
