@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>爱倒班 · 五班三运转</title>
+<meta name="description" content="电厂运行人员五班三运转排班日历">
+<meta name="theme-color" content="#0B0F14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="爱倒班">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon-180.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<script>
+(function () {
+  try {
+    var raw = localStorage.getItem('aidaoban.v1');
+    var t = raw ? (JSON.parse(raw).theme || 'dark') : 'dark';
+    if (t === 'auto') t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<style>
+:root,
+html[data-theme="dark"] {
+  --surface: #0B0F14;
+  --card: #121821;
+  --card2: #0F151D;
+  --text: #E8EDF4;
+  --muted: #8A97A8;
+  --line: rgba(232, 237, 244, .09);
+  --line2: rgba(232, 237, 244, .17);
+  --bar: rgba(11, 15, 20, .78);
+  --bai: #F5A524;    --bai-ink: #1A1206;
+  --zhong: #E5623C;  --zhong-ink: #1A0A05;
+  --ye: #5B7CFA;     --ye-ink: #0B1020;
+  --xiu1: #5C6B7F;   --xiu1-ink: #FFFFFF;
+  --xiu2: #48576B;   --xiu2-ink: #FFFFFF;
+  --nian: #2FB58C;   --nian-ink: #04140E;
+  --accent: #F5A524;
+  --accent-ink: #1A1206;
+  --danger: #F16A6A;
+  --ring: rgba(245, 165, 36, .55);
+  --shadow: 0 24px 60px -34px #000;
+  color-scheme: dark;
+}
+html[data-theme="light"] {
+  --surface: #F6F7F9;
+  --card: #FFFFFF;
+  --card2: #F1F3F7;
+  --text: #16202C;
+  --muted: #5E6B7C;
+  --line: rgba(22, 32, 44, .10);
+  --line2: rgba(22, 32, 44, .20);
+  --bar: rgba(246, 247, 249, .82);
+  --ring: rgba(191, 124, 8, .55);
+  --shadow: 0 24px 60px -38px rgba(22, 32, 44, .35);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: #05080C;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+body.sheet-open { overflow: hidden; }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(760px 420px at 50% -8%, rgba(245, 165, 36, .10), transparent 62%),
+    radial-gradient(620px 420px at 82% 104%, rgba(91, 124, 250, .13), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+.num { font-variant-numeric: tabular-nums; }
+.sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- shell ---------- */
+.phone {
+  position: relative;
+  z-index: 1;
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--surface);
+  border-inline: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow-x: hidden;
+  padding-bottom: calc(78px + env(safe-area-inset-bottom));
+}
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(9px + env(safe-area-inset-top)) 16px 9px;
+  background: var(--bar);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand-mark {
+  width: 34px; height: 34px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 11px;
+  background: linear-gradient(150deg, #F5A524 0%, #E5623C 48%, #5B7CFA 100%);
+  color: #0B0F14;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  box-shadow: 0 6px 18px -8px rgba(245, 165, 36, .8);
+}
+.brand-text { min-width: 0; }
+.brand-name { font-size: 16px; font-weight: 750; letter-spacing: .01em; line-height: 1.15; }
+.brand-sub { font-size: 10.5px; color: var(--muted); letter-spacing: .16em; margin-top: 2px; }
+.appbar-spacer { flex: 1; }
+.icon-btn {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--card);
+  color: var(--text);
+  transition: transform .16s ease, border-color .16s ease, background .16s ease;
+}
+.icon-btn:active { transform: scale(.94); }
+.icon-btn svg { width: 20px; height: 20px; }
+.icon-btn:hover { border-color: var(--line2); }
+
+/* ---------- ios hint ---------- */
+.ios-hint {
+  display: flex; align-items: center; gap: 8px;
+  margin: 10px 14px 0;
+  padding: 9px 10px 9px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(245, 165, 36, .3);
+  background: rgba(245, 165, 36, .1);
+  color: var(--text);
+  font-size: 12.5px;
+}
+.ios-hint svg { width: 17px; height: 17px; flex: none; color: var(--accent); }
+.ios-hint span { flex: 1; }
+.ios-hint b { font-weight: 700; }
+.ios-hint button {
+  width: 30px; height: 30px; flex: none;
+  display: grid; place-items: center;
+  border: 0; border-radius: 9px; background: transparent; color: var(--muted);
+}
+.ios-hint button svg { width: 15px; height: 15px; color: inherit; }
+
+/* ---------- views ---------- */
+.view { padding: 14px 14px 26px; }
+
+/* ---------- now card ---------- */
+.now-card {
+  position: relative;
+  isolation: isolate;
+  padding: 16px 17px 15px;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background: linear-gradient(158deg, var(--card2) 0%, var(--card) 62%);
+  box-shadow: 0 20px 46px -30px #000, inset 0 1px 0 rgba(255, 255, 255, .04);
+  overflow: hidden;
+}
+.now-card::before {
+  content: "";
+  position: absolute;
+  inset: -56% -18% auto -18%;
+  height: 190%;
+  background: radial-gradient(closest-side, var(--sc-glow, var(--sc, var(--accent))), transparent 72%);
+  opacity: .17;
+  z-index: -1;
+  pointer-events: none;
+}
+.now-top { display: flex; align-items: center; gap: 8px; }
+.now-status {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 11.5px; font-weight: 650; letter-spacing: .1em;
+  color: var(--muted); text-transform: uppercase;
+}
+.dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--sc, var(--accent));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--sc, var(--accent)) 22%, transparent);
+}
+.now-time { margin-left: auto; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.now-title {
+  margin: 9px 0 0;
+  font-size: clamp(23px, 7.2vw, 29px);
+  line-height: 1.14;
+  font-weight: 800;
+  letter-spacing: -.022em;
+}
+.now-sub { margin: 6px 0 0; font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+.now-sub b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.progress {
+  margin-top: 11px;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(140, 155, 175, .18);
+  overflow: hidden;
+}
+.progress i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--sc, var(--accent)) 0%, color-mix(in srgb, var(--sc, var(--accent)) 58%, #fff) 100%);
+  transition: width .5s cubic-bezier(.2, .8, .3, 1);
+}
+.now-next {
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line2);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.next-kicker { font-size: 10.5px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.next-main { font-size: 13.5px; line-height: 1.5; }
+.next-main strong { font-weight: 750; }
+.next-main .sep { color: var(--muted); margin: 0 5px; }
+.next-count {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.now-note { margin: 8px 0 0; font-size: 11.5px; color: var(--muted); }
+
+/* ---------- month head ---------- */
+.month-head { margin-top: 20px; }
+.month-row { display: flex; align-items: center; gap: 10px; }
+.month-title { margin: 0; font-size: 20px; font-weight: 780; letter-spacing: -.01em; }
+.month-title .yr { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-right: 6px; letter-spacing: .06em; }
+.leave-pill {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--nian-ink);
+  background: var(--nian);
+  white-space: nowrap;
+}
+.month-ctrl { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+.month-ctrl .spacer { flex: 1; }
+.ghost-btn {
+  height: 34px;
+  padding: 0 11px;
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.ghost-btn:active { transform: scale(.96); }
+.ghost-btn svg { width: 15px; height: 15px; }
+.ctrl-btn {
+  width: 44px; height: 34px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+}
+.ctrl-btn svg { width: 17px; height: 17px; }
+.ctrl-btn:active { transform: scale(.94); }
+
+/* ---------- calendar ---------- */
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin: 10px 0 5px;
+  padding: 0;
+  text-align: center;
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  color: var(--muted);
+}
+.weekdays span:last-child, .weekdays span:nth-child(6) { color: color-mix(in srgb, var(--muted) 78%, var(--accent)); }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-cell {
+  position: relative;
+  min-height: 56px;
+  padding: 5px 2px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--card);
+  color: var(--text);
+  transition: transform .12s ease, border-color .16s ease, background .16s ease;
+}
+.cal-cell:active { transform: scale(.955); }
+.cal-cell:hover { border-color: var(--line2); }
+.cal-cell .daynum { font-size: 12.5px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+.cal-cell.dim { background: transparent; border-color: rgba(140, 155, 175, .10); }
+.cal-cell.dim .daynum { color: var(--muted); opacity: .65; }
+.cal-cell.dim .chip { opacity: .5; }
+.cal-cell.today {
+  box-shadow: inset 0 0 0 1.5px var(--ring), 0 0 20px -6px rgba(245, 165, 36, .35);
+  border-color: transparent;
+}
+.cal-cell.today .daynum { font-weight: 800; color: var(--accent); }
+.cal-cell.weekend .chk { color: var(--muted); }
+.cal-grid.anim-next > * { animation: slideNext .26s cubic-bezier(.2, .8, .3, 1) both; }
+.cal-grid.anim-prev > * { animation: slidePrev .26s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes slideNext { from { opacity: .3; transform: translateX(9px); } to { opacity: 1; transform: none; } }
+@keyframes slidePrev { from { opacity: .3; transform: translateX(-9px); } to { opacity: 1; transform: none; } }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 4px 5px;
+  border-radius: 7px;
+  font-size: 10.5px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+.cell-chip { width: 100%; }
+.sh-bai { background: var(--bai); color: var(--bai-ink); }
+.sh-zhong { background: var(--zhong); color: var(--zhong-ink); }
+.sh-ye { background: var(--ye); color: var(--ye-ink); }
+.sh-xiu1 { background: var(--xiu1); color: var(--xiu1-ink); }
+.sh-xiu2 { background: var(--xiu2); color: var(--xiu2-ink); border: 1px dashed rgba(255, 255, 255, .5); }
+.sh-nian { background: var(--nian); color: var(--nian-ink); }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 12px;
+}
+.legend span { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--muted); }
+.legend i { width: 9px; height: 9px; border-radius: 3px; display: block; }
+.month-summary {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+}
+.month-summary b { color: var(--text); font-weight: 700; }
+
+/* ---------- year ---------- */
+.year-head { display: flex; align-items: center; gap: 10px; }
+.year-title { margin: 0; font-size: 20px; font-weight: 780; }
+.year-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin-top: 13px;
+}
+.stat {
+  padding: 9px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  text-align: center;
+}
+.stat b { display: block; font-size: 17px; font-weight: 780; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.stat span { display: block; font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: .04em; }
+.stat.work b { color: var(--accent); }
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+  margin-top: 13px;
+}
+.mini {
+  padding: 10px 9px 11px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  text-align: left;
+  transition: transform .14s ease, border-color .16s ease;
+}
+.mini:active { transform: scale(.97); }
+.mini:hover { border-color: var(--line2); }
+.mini-head { display: flex; align-items: baseline; gap: 5px; margin-bottom: 7px; }
+.mini-head b { font-size: 12.5px; font-weight: 750; }
+.mini-head span { font-size: 9.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.mini-day {
+  aspect-ratio: 1;
+  border-radius: 2.5px;
+  background: transparent;
+}
+.mini-day.mk-bai { background: var(--bai); }
+.mini-day.mk-zhong { background: var(--zhong); }
+.mini-day.mk-ye { background: var(--ye); }
+.mini-day.mk-xiu1 { background: var(--xiu1); }
+.mini-day.mk-xiu2 { background: var(--xiu2); }
+.mini-day.mk-nian { background: var(--nian); }
+.mini-day.today { box-shadow: 0 0 0 1.5px var(--ring); }
+.mini-blank { aspect-ratio: 1; }
+
+/* ---------- tabbar ---------- */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: 100%;
+  max-width: 520px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--bar);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab {
+  height: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .02em;
+}
+.tab svg { width: 21px; height: 21px; }
+.tab.active { color: var(--accent); }
+.tab:active { opacity: .7; }
+
+/* ---------- sheets ---------- */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(3, 6, 10, .62);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity .24s ease;
+}
+.backdrop.show { opacity: 1; }
+.sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 70;
+  width: 100%;
+  max-width: 520px;
+  max-height: 88dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -24px 60px -30px #000;
+  transform: translateX(-50%) translateY(101%);
+  transition: transform .3s cubic-bezier(.2, .9, .25, 1);
+}
+.sheet.open { transform: translateX(-50%) translateY(0); }
+.sheet:focus { outline: none; }
+.sheet-handle {
+  flex: none;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  touch-action: none;
+  cursor: grab;
+}
+.sheet-handle::before {
+  content: "";
+  width: 38px; height: 4px;
+  border-radius: 99px;
+  background: var(--line2);
+}
+.sheet-head {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 2px 16px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.sheet-head h2 { margin: 0; font-size: 17px; font-weight: 760; letter-spacing: -.01em; }
+.sheet-head p { margin: 3px 0 0; font-size: 11.5px; color: var(--muted); }
+.sheet-head .icon-btn { margin-left: auto; background: transparent; border-color: transparent; color: var(--muted); }
+.sheet-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 16px calc(20px + env(safe-area-inset-bottom));
+}
+
+/* day detail */
+.team-list { display: flex; flex-direction: column; gap: 7px; }
+.team-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  border-radius: 13px;
+  border: 1px solid var(--line);
+  background: var(--card2);
+}
+.team-row.me {
+  border-color: rgba(245, 165, 36, .42);
+  background: linear-gradient(100deg, rgba(245, 165, 36, .12), rgba(245, 165, 36, .02));
+}
+.team-name { width: 42px; flex: none; font-size: 13px; font-weight: 700; }
+.team-row.me .team-name { color: var(--accent); }
+.team-shift { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.team-time { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.me-pill {
+  margin-left: auto;
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 99px;
+  border: 1px solid rgba(245, 165, 36, .5);
+  color: var(--accent);
+  font-size: 9.5px;
+  font-weight: 750;
+  letter-spacing: .06em;
+}
+.rest-hint { font-size: 10.5px; color: var(--muted); }
+.actions { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 7px; }
+.btn {
+  min-height: 44px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line2);
+  border-radius: 12px;
+  background: var(--card2);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+}
+.btn:active { transform: scale(.97); }
+.btn svg { width: 16px; height: 16px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn.ghost { background: transparent; color: var(--muted); }
+.btn.danger { background: rgba(241, 106, 106, .14); border-color: rgba(241, 106, 106, .4); color: var(--danger); }
+.btn[disabled] { opacity: .38; pointer-events: none; }
+.btn.grow { flex: 1; }
+.picker { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.picker button.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.picker button {
+  min-height: 40px;
+  padding: 0 13px;
+  border-radius: 10px;
+  border: 1px solid var(--line2);
+  background: var(--card);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.override-note { margin: 12px 0 0; font-size: 11px; color: var(--muted); line-height: 1.6; }
+.section-label {
+  margin: 16px 0 8px;
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* settings */
+.set-block { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.set-block:last-child { border-bottom: 0; }
+.set-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+.set-head h3 { margin: 0; font-size: 13px; font-weight: 720; }
+.set-head p { margin: 0; font-size: 10.5px; color: var(--muted); }
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--card2); border: 1px solid var(--line); }
+.seg button {
+  flex: 1;
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.seg button.on { background: var(--card); color: var(--text); box-shadow: 0 2px 8px -3px rgba(0, 0, 0, .4); }
+.seg button.on.accent { background: var(--accent); color: var(--accent-ink); }
+.rowline { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.rowline > span:first-child { font-size: 13px; }
+.rowline .grow { flex: 1; }
+.switch { position: relative; width: 48px; height: 28px; flex: none; }
+.switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; }
+.switch i {
+  position: absolute; inset: 0;
+  border-radius: 99px;
+  background: rgba(140, 155, 175, .3);
+  transition: background .2s ease;
+}
+.switch i::after {
+  content: "";
+  position: absolute; top: 3px; left: 3px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s cubic-bezier(.3, 1.4, .5, 1);
+}
+.switch input:checked + i { background: var(--nian); }
+.switch input:checked + i::after { transform: translateX(20px); }
+.switch input:focus-visible + i { outline: 2px solid var(--ring); outline-offset: 2px; }
+select.inp, input.inp {
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line2);
+  background: var(--card2);
+  color: var(--text);
+  font-size: 13px;
+}
+input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums; }
+.hint { margin: 8px 0 0; font-size: 11px; line-height: 1.65; color: var(--muted); }
+.leave-box {
+  margin-top: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(47, 181, 140, .32);
+  background: rgba(47, 181, 140, .08);
+  font-size: 12px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.leave-box b { color: var(--nian); font-weight: 780; }
+.data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 4px; }
+.data-grid .btn { padding: 0 6px; font-size: 11.5px; }
+.ver { margin: 16px 0 0; text-align: center; font-size: 10px; color: var(--muted); letter-spacing: .08em; }
+
+/* ---------- confirm / toast ---------- */
+.confirm-wrap {
+  position: fixed; inset: 0; z-index: 95;
+  display: grid; place-items: center;
+  padding: 24px;
+  background: rgba(3, 6, 10, .66);
+  backdrop-filter: blur(3px);
+}
+.confirm-card {
+  width: 100%; max-width: 320px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--card);
+  border: 1px solid var(--line2);
+  box-shadow: 0 30px 70px -30px #000;
+}
+.confirm-card p { margin: 0; font-size: 13.5px; line-height: 1.65; }
+.confirm-actions { display: flex; gap: 8px; margin-top: 16px; }
+.confirm-actions .btn { flex: 1; }
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  transform: translateX(-50%) translateY(12px);
+  z-index: 90;
+  max-width: calc(100% - 32px);
+  padding: 11px 15px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid rgba(245, 165, 36, .45);
+  box-shadow: 0 18px 40px -18px #000;
+  font-size: 12.5px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s cubic-bezier(.2, .9, .3, 1);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- small screens ---------- */
+@media (max-width: 359px) {
+  .view { padding-inline: 10px; }
+  .cal-grid, .weekdays { gap: 0; }
+  .cal-cell { border-radius: 7px; border-inline-width: 0; min-height: 54px; }
+  .cell-chip { font-size: 9.5px; padding: 3px 2px; }
+  .cal-cell .daynum { font-size: 11.5px; }
+  .seg button { font-size: 11px; padding: 0 2px; }
+  .data-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 600px) {
+  .phone { border-radius: 26px; margin-block: 22px; min-height: calc(100dvh - 44px); }
+  .tabbar { border-radius: 0 0 26px 26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+}
+@media (prefers-contrast: more) {
+  .cal-cell { border-color: var(--line2); }
+  .chip { outline: 1px solid rgba(0, 0, 0, .25); }
+}
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <path d="M4 7h9M18 7h2M4 17h3M12 17h8"/><circle cx="15.5" cy="7" r="2.4"/><circle cx="9.5" cy="17" r="2.4"/>
+  </symbol>
+  <symbol id="i-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 5l-7 7 7 7"/>
+  </symbol>
+  <symbol id="i-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 5l7 7-7 7"/>
+  </symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3.5" y="5.5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3.5v4M16 3.5v4"/>
+  </symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+    <rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/>
+    <rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/>
+  </symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M6 6l12 12M18 6L6 18"/>
+  </symbol>
+  <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 15V4m0 0L8 8m4-4l4 4M5 13v7h14v-7"/>
+  </symbol>
+  <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/>
+  </symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 16V5m0 0L8 9m4-4l4 4M5 19h14"/>
+  </symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9L17.5 7"/>
+  </symbol>
+  <symbol id="i-today" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.4"/>
+  </symbol>
+</svg>
+
+<div class="phone">
+  <div id="ios-hint" class="ios-hint" hidden>
+    <svg aria-hidden="true"><use href="#i-share"></use></svg>
+    <span>点底部 <b>分享</b> → <b>添加到主屏幕</b>，即可当 App 用</span>
+    <button id="ios-hint-close" type="button" aria-label="关闭提示"><svg aria-hidden="true"><use href="#i-x"></use></svg></button>
+  </div>
+
+  <header class="appbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">倒</div>
+      <div class="brand-text">
+        <div class="brand-name">爱倒班</div>
+        <div class="brand-sub">五班三运转</div>
+      </div>
+    </div>
+    <div class="appbar-spacer"></div>
+    <button id="btn-settings" class="icon-btn" type="button" aria-label="设置">
+      <svg aria-hidden="true"><use href="#i-gear"></use></svg>
+    </button>
+  </header>
+
+  <main id="month-view" class="view">
+    <section id="now-card" class="now-card" aria-live="polite"></section>
+
+    <div class="month-head">
+      <div class="month-row">
+        <h2 class="month-title" id="month-title"></h2>
+        <span class="leave-pill" id="leave-pill"></span>
+      </div>
+      <div class="month-ctrl">
+        <button class="ctrl-btn" id="btn-prev" type="button" aria-label="上一个月"><svg aria-hidden="true"><use href="#i-left"></use></svg></button>
+        <button class="ctrl-btn" id="btn-next" type="button" aria-label="下一个月"><svg aria-hidden="true"><use href="#i-right"></use></svg></button>
+        <div class="spacer"></div>
+        <button class="ghost-btn" id="btn-today" type="button" hidden>
+          <svg aria-hidden="true"><use href="#i-today"></use></svg>回到今天
+        </button>
+      </div>
+    </div>
+
+    <div class="weekdays" aria-hidden="true">
+      <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+    </div>
+    <div class="cal-grid" id="cal-grid" aria-label="排班日历"></div>
+
+    <div class="legend" id="legend" aria-hidden="true"></div>
+    <p class="month-summary" id="month-summary"></p>
+  </main>
+
+  <main id="year-view" class="view" hidden>
+    <div class="year-head">
+      <h2 class="year-title" id="year-title"></h2>
+      <div class="appbar-spacer"></div>
+      <button class="ctrl-btn" id="btn-year-prev" type="button" aria-label="上一年"><svg aria-hidden="true"><use href="#i-left"></use></svg></button>
+      <button class="ctrl-btn" id="btn-year-next" type="button" aria-label="下一年"><svg aria-hidden="true"><use href="#i-right"></use></svg></button>
+    </div>
+    <div class="year-stats" id="year-stats"></div>
+    <div class="year-grid" id="year-grid"></div>
+    <div style="margin-top:12px">
+      <button class="ghost-btn" id="btn-year-today" type="button" hidden>
+        <svg aria-hidden="true"><use href="#i-today"></use></svg>回到今年
+      </button>
+    </div>
+  </main>
+
+  <nav class="tabbar" aria-label="主导航">
+    <button class="tab active" id="nav-month" type="button" data-nav="month">
+      <svg aria-hidden="true"><use href="#i-cal"></use></svg><span>月历</span>
+    </button>
+    <button class="tab" id="btn-year" type="button" data-nav="year">
+      <svg aria-hidden="true"><use href="#i-grid"></use></svg><span>全年</span>
+    </button>
+    <button class="tab" id="nav-settings" type="button" data-nav="settings">
+      <svg aria-hidden="true"><use href="#i-gear"></use></svg><span>设置</span>
+    </button>
+  </nav>
+</div>
+
+<div id="backdrop" class="backdrop" hidden></div>
+
+<section id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1" hidden>
+  <div class="sheet-handle" id="sheet-handle" aria-hidden="true"></div>
+  <div class="sheet-head">
+    <div>
+      <h2 id="sheet-title"></h2>
+      <p id="sheet-sub"></p>
+    </div>
+    <button class="icon-btn" id="sheet-close" type="button" aria-label="关闭">
+      <svg aria-hidden="true"><use href="#i-x"></use></svg>
+    </button>
+  </div>
+  <div class="sheet-body" id="sheet-body"></div>
+</section>
+
+<section id="sheet-settings" class="sheet" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1" hidden>
+  <div class="sheet-handle" id="settings-handle" aria-hidden="true"></div>
+  <div class="sheet-head">
+    <div>
+      <h2 id="settings-title">设置</h2>
+      <p>身份、提醒、年休与数据</p>
+    </div>
+    <button class="icon-btn" id="settings-close" type="button" aria-label="关闭">
+      <svg aria-hidden="true"><use href="#i-x"></use></svg>
+    </button>
+  </div>
+  <div class="sheet-body" id="settings-body">
+
+    <div class="set-block">
+      <div class="set-head"><h3>我是哪个值</h3><p>影响日历、提醒与年休统计</p></div>
+      <div class="seg" id="set-team" role="group" aria-label="选择班组"></div>
+    </div>
+
+    <div class="set-block">
+      <div class="set-head"><h3>主题</h3></div>
+      <div class="seg" id="set-theme" role="group" aria-label="选择主题"></div>
+    </div>
+
+    <div class="set-block">
+      <div class="set-head"><h3>上班提醒</h3><p>仅在应用打开时生效</p></div>
+      <div class="rowline">
+        <span>开启提醒</span>
+        <div class="grow"></div>
+        <label class="switch">
+          <input type="checkbox" id="set-remind">
+          <i aria-hidden="true"></i>
+          <span class="sr">开启上班提醒</span>
+        </label>
+      </div>
+      <div class="rowline">
+        <span>提前量</span>
+        <div class="grow"></div>
+        <select class="inp" id="set-lead" aria-label="提前多久提醒">
+          <option value="30">30 分钟</option>
+          <option value="60">60 分钟</option>
+          <option value="90">90 分钟</option>
+          <option value="120">120 分钟</option>
+          <option value="180">180 分钟</option>
+        </select>
+      </div>
+      <p class="hint">网页应用在 iOS 上无法后台定时，应用关掉就不会响。想要锁屏提醒，请用下方「导出到系统日历」。</p>
+    </div>
+
+    <div class="set-block">
+      <div class="set-head"><h3>年休</h3><p id="set-leave-year">—</p></div>
+      <div class="rowline">
+        <span>全年天数</span>
+        <div class="grow"></div>
+        <input class="inp" id="set-leave-total" type="number" min="0" max="366" step="1" inputmode="numeric" aria-label="全年年休总天数">
+      </div>
+      <div class="leave-box" id="set-leave-readout"></div>
+    </div>
+
+    <div class="set-block">
+      <div class="set-head"><h3>系统日历</h3><p>真正能在锁屏时提醒</p></div>
+      <button class="btn primary" id="btn-ics" type="button" style="width:100%">
+        <svg aria-hidden="true"><use href="#i-download"></use></svg>导出未来 90 天的班到系统日历
+      </button>
+      <p class="hint">生成 .ics 文件，在 iPhone 上点开后选择「添加全部」，之后由系统日历按你的提前量提醒。改了班表重新导出一次即可。</p>
+    </div>
+
+    <div class="set-block">
+      <div class="set-head"><h3>数据</h3><p>只存在本机，不上传</p></div>
+      <div class="data-grid">
+        <button class="btn ghost" id="btn-export" type="button"><svg aria-hidden="true"><use href="#i-upload"></use></svg>导出备份</button>
+        <button class="btn ghost" id="btn-import" type="button"><svg aria-hidden="true"><use href="#i-download"></use></svg>导入备份</button>
+        <button class="btn danger" id="btn-clear" type="button"><svg aria-hidden="true"><use href="#i-trash"></use></svg>清空</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json,.json" class="sr" tabindex="-1">
+      <p class="hint">换手机或清除网站数据会丢，重要的话导出一份 JSON 存着。</p>
+    </div>
+
+    <p class="ver">爱倒班 · 五班三运转 · 本地版</p>
+  </div>
+</section>
+
+<div id="confirm" class="confirm-wrap" hidden>
+  <div class="confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="confirm-msg">
+    <p id="confirm-msg"></p>
+    <div class="confirm-actions">
+      <button class="btn ghost" id="confirm-cancel" type="button">取消</button>
+      <button class="btn danger" id="confirm-ok" type="button">确认</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="./sched.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var S = window.SCHED;
+  var KEY = 'aidaoban.v1';
+  var WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  var WEEK_SHORT = ['日', '一', '二', '三', '四', '五', '六'];
+
+  var DEFAULTS = {
+    version: 1,
+    me: 0,
+    theme: 'dark',
+    view: 'month',
+    remind: { enabled: false, leadMinutes: 90 },
+    overrides: {},
+    leave: {},
+    lastAlert: {},
+    hints: { iosInstallDismissed: false }
+  };
+
+  var state = load();
+  var today = new Date();
+  var curY = today.getFullYear();
+  var curM = today.getMonth();
+  var yearViewY = today.getFullYear();
+  var sheetDate = null;
+  var pickerOpen = false;
+  var activeSheet = null;
+  var lastFocus = null;
+  var toastTimer = null;
+  var confirmAction = null;
+  var lastDayKey = S.keyOfDate(today);
+
+  /* ---------- storage ---------- */
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function isObj(v) { return v && typeof v === 'object' && !Array.isArray(v); }
+
+  function mergeDeep(base, patch) {
+    if (!isObj(patch)) return base;
+    Object.keys(patch).forEach(function (k) {
+      if (k === '__proto__' || k === 'constructor' || k === 'prototype') return;
+      var v = patch[k];
+      if (isObj(v) && isObj(base[k])) base[k] = mergeDeep(base[k], v);
+      else if (v !== undefined) base[k] = v;
+    });
+    return base;
+  }
+
+  function load() {
+    var s = clone(DEFAULTS);
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) mergeDeep(s, JSON.parse(raw));
+    } catch (e) { /* 用默认值 */ }
+    return sanitize(s);
+  }
+
+  function sanitize(s) {
+    s.version = 1;
+    s.me = (typeof s.me === 'number' && s.me >= 0 && s.me < 5) ? Math.floor(s.me) : 0;
+    s.theme = (s.theme === 'light' || s.theme === 'dark' || s.theme === 'auto') ? s.theme : 'dark';
+    s.view = (s.view === 'year') ? 'year' : 'month';
+    s.remind = isObj(s.remind) ? s.remind : { enabled: false, leadMinutes: 90 };
+    s.remind.enabled = !!s.remind.enabled;
+    s.remind.leadMinutes = [30, 60, 90, 120, 180].indexOf(Number(s.remind.leadMinutes)) >= 0 ? Number(s.remind.leadMinutes) : 90;
+
+    var ov = {};
+    if (isObj(s.overrides)) {
+      Object.keys(s.overrides).forEach(function (t) {
+        if (!/^[0-4]$/.test(t) || !isObj(s.overrides[t])) return;
+        var inner = {};
+        Object.keys(s.overrides[t]).forEach(function (k) {
+          var v = s.overrides[t][k];
+          if (/^\d{4}-\d{2}-\d{2}$/.test(k) && S.ALL_SHIFTS.indexOf(v) >= 0) inner[k] = v;
+        });
+        if (Object.keys(inner).length) ov[t] = inner;
+      });
+    }
+    s.overrides = ov;
+
+    var lv = {};
+    if (isObj(s.leave)) {
+      Object.keys(s.leave).forEach(function (t) {
+        if (!/^[0-4]$/.test(t) || !isObj(s.leave[t])) return;
+        var years = {};
+        Object.keys(s.leave[t]).forEach(function (y) {
+          var cfg = s.leave[t][y];
+          if (!/^\d{4}$/.test(y) || !isObj(cfg)) return;
+          var n = Number(cfg.total);
+          if (isFinite(n) && n >= 0) years[y] = { total: Math.floor(n) };
+        });
+        if (Object.keys(years).length) lv[t] = years;
+      });
+    }
+    s.leave = lv;
+
+    var la = {};
+    if (isObj(s.lastAlert)) {
+      Object.keys(s.lastAlert).forEach(function (k) {
+        if (typeof s.lastAlert[k] === 'boolean') la[k] = true;
+      });
+    }
+    s.lastAlert = la;
+    s.hints = isObj(s.hints) ? s.hints : { iosInstallDismissed: false };
+    s.hints.iosInstallDismissed = !!s.hints.iosInstallDismissed;
+    return s;
+  }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* 隐私模式等 */ }
+  }
+
+  /* ---------- date helpers ---------- */
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  function hm(d) { return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+
+  function clock(d) { return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+
+  function dateAt(y, m, d) { return new Date(y, m, d); }
+
+  function shiftClass(k) {
+    if (k === '白') return 'sh-bai';
+    if (k === '中') return 'sh-zhong';
+    if (k === '夜') return 'sh-ye';
+    if (k === '休1') return 'sh-xiu1';
+    if (k === '休2') return 'sh-xiu2';
+    return 'sh-nian';
+  }
+
+  function shiftLong(k) {
+    if (k === '白') return '白班';
+    if (k === '中') return '中班';
+    if (k === '夜') return '夜班';
+    return k;
+  }
+
+  function shiftSolid(k) {
+    if (k === '白') return '#F5A524';
+    if (k === '中') return '#E5623C';
+    if (k === '夜') return '#5B7CFA';
+    if (k === '年休') return '#2FB58C';
+    return '#5C6B7F';
+  }
+
+  function shiftColor(k) {
+    if (k === '白') return 'rgba(245,165,36,.30)';
+    if (k === '中') return 'rgba(229,98,60,.28)';
+    if (k === '夜') return 'rgba(91,124,250,.32)';
+    if (k === '年休') return 'rgba(47,181,140,.28)';
+    return 'rgba(92,107,127,.22)';
+  }
+
+  function effective(y, m, d, team) {
+    var k = S.dateKey(y, m, d);
+    var t = state.overrides[team];
+    if (t && t[k]) return t[k];
+    return S.shiftOfTeam(team, y, m, d);
+  }
+
+  function effectiveOn(date, team) {
+    return effective(date.getFullYear(), date.getMonth(), date.getDate(), team);
+  }
+
+  function sameDay(a, b) {
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+
+  function dayDiff(a, b) {
+    var A = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+    var B = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((A - B) / 86400000);
+  }
+
+  function relative(date) {
+    var n = new Date();
+    var diff = dayDiff(date, n);
+    if (diff === 0) return '今天';
+    if (diff === 1) return '明天';
+    if (diff === 2) return '后天';
+    if (diff === -1) return '昨天';
+    if (diff === -2) return '前天';
+    return '';
+  }
+
+  function dayLabel(date) {
+    var rel = relative(date);
+    var wd = WEEK[date.getDay()];
+    if (rel) return rel + ' ' + wd;
+    return (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + wd;
+  }
+
+  function leaveFor(team, year) {
+    var cfg = state.leave[team];
+    if (cfg && cfg[year] && isFinite(cfg[year].total)) return cfg[year].total;
+    if (cfg) {
+      var best = null;
+      Object.keys(cfg).forEach(function (y) {
+        var n = Number(y);
+        if (!isFinite(n)) return;
+        if (best === null || Math.abs(n - year) < Math.abs(best - year) ||
+            (Math.abs(n - year) === Math.abs(best - year) && n < best)) best = n;
+      });
+      if (best !== null && cfg[best] && isFinite(cfg[best].total)) return cfg[best].total;
+    }
+    return 5;
+  }
+
+  function leaveUsed(team, year) {
+    var t = state.overrides[team];
+    if (!t) return 0;
+    var prefix = year + '-';
+    var n = 0;
+    Object.keys(t).forEach(function (k) {
+      if (k.indexOf(prefix) === 0 && t[k] === '年休') n++;
+    });
+    return n;
+  }
+
+  function leaveRemain(team, year) {
+    return Math.max(0, leaveFor(team, year) - leaveUsed(team, year));
+  }
+
+  function fmtDuration(ms) {
+    var mins = Math.max(0, Math.round(ms / 60000));
+    var days = Math.floor(mins / 1440);
+    var hours = Math.floor((mins % 1440) / 60);
+    var m = mins % 60;
+    if (days > 0) return days + ' 天' + (hours > 0 ? ' ' + hours + ' 小时' : '');
+    if (hours > 0) return hours + ' 小时' + (m > 0 ? ' ' + m + ' 分' : '');
+    return m + ' 分';
+  }
+
+  /* ---------- lookups ---------- */
+  function el(id) { return document.getElementById(id); }
+
+  function findNextShift(now) {
+    for (var i = 0; i < 400; i++) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      var sh = effectiveOn(d, state.me);
+      if (!S.isWorkShift(sh)) continue;
+      var st = S.shiftStartDate(d.getFullYear(), d.getMonth(), d.getDate(), sh);
+      if (st && st.getTime() > now.getTime()) {
+        return { date: d, shift: sh, start: st, win: S.shiftWindow(sh) };
+      }
+    }
+    return null;
+  }
+
+  /* ---------- now card ---------- */
+  function renderNow() {
+    var card = el('now-card');
+    var now = new Date();
+    var y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+    var sh = effective(y, m, d, state.me);
+    var w = S.shiftWindow(sh);
+    var st = S.shiftStartDate(y, m, d, sh);
+    var en = S.shiftEndDate(y, m, d, sh);
+
+    var status = '';
+    var title = '';
+    var sub = '';
+    var prog = -1;
+    var note = '';
+
+    if (sh === '年休') {
+      status = '年休';
+      title = '年休';
+      sub = '今天不计班';
+      note = '本年度年休剩余 ' + leaveRemain(state.me, y) + ' 天';
+    } else if (!w.isWork) {
+      status = '休息中';
+      title = '休息中';
+      sub = sh === '休1' ? '休1 · 夜班后休整' : '休2 · 中班后休整';
+    } else if (now >= st && now < en) {
+      status = '当班中';
+      title = '正在上 ' + w.label;
+      sub = '还有 <b>' + fmtDuration(en - now) + '</b> 下班';
+      prog = Math.max(0, Math.min(100, (now - st) / (en - st) * 100));
+    } else if (now < st) {
+      status = '待上班';
+      title = '今天 ' + w.label;
+      sub = '距上班还有 <b>' + fmtDuration(st - now) + '</b>';
+    } else {
+      status = '已下班';
+      title = '今天 ' + w.label + ' 已结束';
+      sub = '好好休息';
+    }
+
+    var nx = findNextShift(now);
+    var nextHtml = '';
+    if (nx && status !== '待上班') {
+      nextHtml =
+        '<div class="now-next">' +
+          '<div class="next-kicker">下一班</div>' +
+          '<div class="next-main"><strong>' + nx.win.label + '</strong>' +
+            '<span class="sep">·</span>' + dayLabel(nx.date) +
+            '<span class="sep">·</span><span class="num">' + nx.win.start + '–' + nx.win.end + '</span>' +
+          '</div>' +
+          '<div class="next-count">还有 ' + fmtDuration(nx.start - now) + '</div>' +
+        '</div>';
+    }
+
+    card.style.setProperty('--sc', shiftSolid(sh));
+    card.style.setProperty('--sc-glow', shiftColor(sh));
+    card.innerHTML =
+      '<div class="now-top">' +
+        '<span class="now-status"><i class="dot"></i>' + status + '</span>' +
+        '<span class="now-time num">' + (w.isWork ? w.start + '–' + w.end : '全天') + '</span>' +
+      '</div>' +
+      '<h2 class="now-title">' + title + '</h2>' +
+      '<p class="now-sub">' + sub + '</p>' +
+      (prog >= 0 ? '<div class="progress"><i style="width:' + prog.toFixed(1) + '%"></i></div>' : '') +
+      nextHtml +
+      (note ? '<p class="now-note">' + note + '</p>' : '');
+  }
+
+  /* ---------- legend ---------- */
+  function renderLegend() {
+    var items = [
+      ['白', '白班', 'var(--bai)'],
+      ['中', '中班', 'var(--zhong)'],
+      ['夜', '夜班', 'var(--ye)'],
+      ['休1', '休1 夜班后', 'var(--xiu1)'],
+      ['休2', '休2 中班后', 'var(--xiu2)'],
+      ['年休', '年休', 'var(--nian)']
+    ];
+    el('legend').innerHTML = items.map(function (it) {
+      return '<span><i style="background:' + it[2] + '"></i>' + it[1] + '</span>';
+    }).join('');
+  }
+
+  /* ---------- month ---------- */
+  function renderMonth() {
+    var now = new Date();
+    el('month-title').innerHTML = '<span class="yr">' + curY + '年</span>' + (curM + 1) + '月';
+
+    var y = displayedYear();
+    var used = leaveUsed(state.me, y);
+    var total = leaveFor(state.me, y);
+    var remain = Math.max(0, total - used);
+    el('leave-pill').textContent = '年休 ' + used + '/' + total + ' · 剩 ' + remain + '天';
+
+    var first = new Date(curY, curM, 1);
+    var offset = (first.getDay() + 6) % 7;
+    var start = new Date(curY, curM, 1 - offset);
+    var cells = [];
+
+    for (var i = 0; i < 42; i++) {
+      var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      var k = effective(d.getFullYear(), d.getMonth(), d.getDate(), state.me);
+      var inMonth = d.getMonth() === curM;
+      var isToday = sameDay(d, now);
+      var wd = d.getDay();
+      var cls = 'cal-cell';
+      if (!inMonth) cls += ' dim';
+      if (isToday) cls += ' today';
+      if (wd === 0 || wd === 6) cls += ' weekend';
+      var aria = (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + WEEK[wd] + ' ' + shiftLong(k);
+      cells.push(
+        '<button type="button" class="' + cls + '" data-date="' + S.keyOfDate(d) + '" aria-label="' + aria + '">' +
+          '<span class="daynum num">' + d.getDate() + '</span>' +
+          '<span class="chip cell-chip ' + shiftClass(k) + '">' + k + '</span>' +
+        '</button>'
+      );
+    }
+    el('cal-grid').innerHTML = cells.join('\n');
+
+    el('btn-today').hidden = (curY === now.getFullYear() && curM === now.getMonth());
+
+    var counts = { '白': 0, '中': 0, '夜': 0, '年休': 0, work: 0 };
+    var last = new Date(curY, curM + 1, 0).getDate();
+    for (var day = 1; day <= last; day++) {
+      var kk = effective(curY, curM, day, state.me);
+      if (counts[kk] === undefined) counts[kk] = 0;
+      counts[kk]++;
+      if (S.isWorkShift(kk)) counts.work++;
+    }
+    el('month-summary').innerHTML =
+      '本月 <b>白 ' + counts['白'] + '</b> · <b>中 ' + counts['中'] + '</b> · <b>夜 ' + counts['夜'] +
+      '</b> · 年休 ' + counts['年休'] + ' · 上班 <b>' + counts.work + '</b> 天';
+  }
+
+  function animateGrid(dir) {
+    var grid = el('cal-grid');
+    grid.classList.remove('anim-next', 'anim-prev');
+    void grid.offsetWidth;
+    grid.classList.add(dir > 0 ? 'anim-next' : 'anim-prev');
+  }
+
+  function changeMonth(delta) {
+    var d = new Date(curY, curM + delta, 1);
+    curY = d.getFullYear();
+    curM = d.getMonth();
+    renderMonth();
+    animateGrid(delta);
+  }
+
+  /* ---------- year ---------- */
+  function renderYear() {
+    var y = yearViewY;
+    var me = state.me;
+    el('year-title').textContent = y + '年';
+
+    var counts = { '白': 0, '中': 0, '夜': 0, '休1': 0, '休2': 0, '年休': 0, work: 0 };
+    var cur = new Date(y, 0, 1);
+    while (cur.getFullYear() === y) {
+      var k = effectiveOn(cur, me);
+      counts[k]++;
+      if (S.isWorkShift(k)) counts.work++;
+      cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 1);
+    }
+
+    var stats = [
+      ['上班', counts.work, true],
+      ['白班', counts['白'], false],
+      ['中班', counts['中'], false],
+      ['夜班', counts['夜'], false],
+      ['休1', counts['休1'], false],
+      ['休2', counts['休2'], false],
+      ['年休', counts['年休'], false],
+      ['年休剩余', leaveRemain(me, y), false]
+    ];
+    el('year-stats').innerHTML = stats.map(function (s) {
+      return '<div class="stat' + (s[2] ? ' work' : '') + '"><b class="num">' + s[1] + '</b><span>' + s[0] + '</span></div>';
+    }).join('');
+
+    var now = new Date();
+    var cards = [];
+    for (var m = 0; m < 12; m++) {
+      var first = new Date(y, m, 1);
+      var offset = (first.getDay() + 6) % 7;
+      var days = new Date(y, m + 1, 0).getDate();
+      var marks = [];
+      for (var b = 0; b < offset; b++) marks.push('<span class="mini-blank"></span>');
+      var monthWork = 0;
+      for (var d = 1; d <= days; d++) {
+        var k2 = effective(y, m, d, me);
+        if (S.isWorkShift(k2)) monthWork++;
+        var cls2 = 'mini-day mk-' + shiftClass(k2).replace('sh-', '');
+        if (y === now.getFullYear() && m === now.getMonth() && d === now.getDate()) cls2 += ' today';
+        marks.push('<span class="' + cls2 + '"></span>');
+      }
+      while (marks.length < 42) marks.push('<span class="mini-blank"></span>');
+      cards.push(
+        '<button type="button" class="mini" data-month="' + m + '" aria-label="' + y + '年' + (m + 1) + '月，上班 ' + monthWork + ' 天">' +
+          '<span class="mini-head"><b>' + (m + 1) + '月</b><span>上班 ' + monthWork + ' 天</span></span>' +
+          '<span class="mini-grid">' + marks.join('') + '</span>' +
+        '</button>'
+      );
+    }
+    el('year-grid').innerHTML = cards.join('\n');
+    el('btn-year-today').hidden = (y === now.getFullYear());
+  }
+
+  /* ---------- day sheet ---------- */
+  function sheetShiftBlock(k) {
+    var w = S.shiftWindow(k);
+    var html = '<span class="chip ' + shiftClass(k) + '">' + shiftLong(k) + '</span>';
+    if (w.isWork) {
+      html += '<span class="team-time num">' + w.start + '–' + w.end + '</span>';
+    } else {
+      var hint = k === '休1' ? '夜班后休息' : k === '休2' ? '中班后休息' : k === '年休' ? '年假不计班' : '';
+      if (hint) html += '<span class="rest-hint">' + hint + '</span>';
+    }
+    return html;
+  }
+
+  function renderDaySheet() {
+    if (!sheetDate) return;
+    var y = sheetDate.getFullYear(), m = sheetDate.getMonth(), d = sheetDate.getDate();
+    var key = S.dateKey(y, m, d);
+    var rel = relative(sheetDate);
+
+    el('sheet-title').textContent = y + '年' + (m + 1) + '月' + d + '日 ' + WEEK[sheetDate.getDay()];
+    el('sheet-sub').textContent = (rel ? rel + ' · ' : '') + '循环第 ' + (S.dayIndex(y, m, d) + 1) + ' 天';
+
+    var rows = [];
+    for (var i = 0; i < S.TEAMS.length; i++) {
+      var k = effective(y, m, d, i);
+      var me = (i === state.me);
+      rows.push(
+        '<div class="team-row' + (me ? ' me' : '') + '">' +
+          '<span class="team-name">' + S.TEAMS[i] + '</span>' +
+          '<span class="team-shift">' + sheetShiftBlock(k) + '</span>' +
+          (me ? '<span class="me-pill">我</span>' : '') +
+        '</div>'
+      );
+    }
+
+    var myShift = effective(y, m, d, state.me);
+    var ovMap = state.overrides[state.me] || {};
+    var hasOv = !!ovMap[key];
+    var isNian = myShift === '年休';
+
+    var actions =
+      '<div class="actions">' +
+        '<button class="btn ' + (isNian ? 'ghost' : 'primary') + ' grow" type="button" data-act="leave">' +
+          (isNian ? '取消年休' : '标记为年休') + '</button>' +
+        '<button class="btn grow" type="button" data-act="picker" aria-expanded="' + (pickerOpen ? 'true' : 'false') + '">调整班次</button>' +
+        '<button class="btn ghost" type="button" data-act="reset"' + (hasOv ? '' : ' disabled') + '>恢复默认</button>' +
+      '</div>';
+
+    if (pickerOpen) {
+      actions += '<div class="picker">' + ['白', '中', '夜', '休1', '休2'].map(function (k2) {
+        return '<button type="button" class="' + (myShift === k2 ? 'on' : '') + '" data-pick="' + k2 + '">' +
+          '<span class="chip ' + shiftClass(k2) + '">' + k2 + '</span></button>';
+      }).join('') + '</div>';
+    }
+
+    actions += '<p class="override-note">手动调整只影响 <b>' + key + ' · ' + S.TEAMS[state.me] + '</b>，不会打乱整个循环。' +
+      (hasOv ? '当前为手动调整，可随时恢复默认。' : '') + '</p>';
+
+    var scrollTop = el('sheet-body').scrollTop;
+    el('sheet-body').innerHTML =
+      '<div class="section-label">当天五个班组</div>' +
+      '<div class="team-list">' + rows.join('') + '</div>' +
+      actions;
+    el('sheet-body').scrollTop = scrollTop;
+  }
+
+  /* ---------- settings ---------- */
+  function syncSettings() {
+    el('set-team').innerHTML = S.TEAMS.map(function (t, i) {
+      return '<button type="button" data-team="' + i + '" class="' + (i === state.me ? 'on accent' : '') + '">' + t + '</button>';
+    }).join('');
+
+    var themes = [['auto', '跟随系统'], ['light', '浅色'], ['dark', '深色']];
+    el('set-theme').innerHTML = themes.map(function (t) {
+      return '<button type="button" data-theme-val="' + t[0] + '" class="' + (state.theme === t[0] ? 'on accent' : '') + '">' + t[1] + '</button>';
+    }).join('');
+
+    el('set-remind').checked = !!state.remind.enabled;
+    el('set-lead').value = String(state.remind.leadMinutes);
+    el('set-leave-year').textContent = displayedYear() + ' 年';
+    el('set-leave-total').value = leaveFor(state.me, displayedYear());
+    updateLeaveReadout();
+  }
+
+  function updateLeaveReadout() {
+    var used = leaveUsed(state.me, curY);
+    var total = leaveFor(state.me, curY);
+    var remain = Math.max(0, total - used);
+    el('set-leave-readout').innerHTML =
+      '已用 <b>' + used + '</b> 天 · 剩余 <b>' + remain + '</b> 天 · 全年 <b>' + total + '</b> 天';
+  }
+
+  function renderAll() {
+    renderNow();
+    renderMonth();
+    if (!el('year-view').hidden) renderYear();
+  }
+
+  /* ---------- theme ---------- */
+  function applyTheme() {
+    var t = state.theme;
+    if (t === 'auto') {
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+    }
+    document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', t === 'light' ? '#F6F7F9' : '#0B0F14');
+  }
+
+  function displayedYear() {
+    return el('year-view').hidden ? curY : yearViewY;
+  }
+
+  /* ---------- sheet manager ---------- */
+  function focusables(root) {
+    return Array.prototype.slice.call(
+      root.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')
+    ).filter(function (n) { return n.offsetParent !== null; });
+  }
+
+  function openSheet(sheet) {
+    if (activeSheet && activeSheet !== sheet) closeSheet(activeSheet, true);
+    lastFocus = document.activeElement;
+    activeSheet = sheet;
+    el('backdrop').hidden = false;
+    sheet.hidden = false;
+    requestAnimationFrame(function () {
+      el('backdrop').classList.add('show');
+      sheet.classList.add('open');
+    });
+    document.body.classList.add('sheet-open');
+    setTimeout(function () {
+      try { sheet.focus({ preventScroll: true }); } catch (e) { /* noop */ }
+    }, 70);
+  }
+
+  function closeSheet(sheet, instant) {
+    var s = sheet || activeSheet;
+    if (!s) return;
+    s.classList.remove('open');
+    if (activeSheet === s) activeSheet = null;
+    if (!activeSheet) {
+      el('backdrop').classList.remove('show');
+      document.body.classList.remove('sheet-open');
+    }
+    var delay = instant ? 0 : 300;
+    setTimeout(function () {
+      if (!s.classList.contains('open')) s.hidden = true;
+      if (!activeSheet) el('backdrop').hidden = true;
+    }, delay);
+    if (lastFocus && lastFocus.focus) {
+      try { lastFocus.focus({ preventScroll: true }); } catch (e) { /* noop */ }
+      lastFocus = null;
+    }
+  }
+
+  function bindDrag(handleId, sheetId) {
+    var handle = el(handleId);
+    var sheet = el(sheetId);
+    if (!handle) return;
+    var startY = 0, dy = 0, dragging = false;
+
+    handle.addEventListener('pointerdown', function (e) {
+      dragging = true;
+      startY = e.clientY;
+      dy = 0;
+      sheet.style.transition = 'none';
+      try { handle.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
+    });
+    handle.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      dy = Math.max(0, e.clientY - startY);
+      sheet.style.transform = 'translateX(-50%) translateY(' + dy + 'px)';
+    });
+    function end() {
+      if (!dragging) return;
+      dragging = false;
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+      if (dy > 80) closeSheet(sheet);
+    }
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  }
+
+  /* ---------- toast ---------- */
+  function toast(msg) {
+    var t = el('toast');
+    t.textContent = msg;
+    t.hidden = false;
+    requestAnimationFrame(function () { t.classList.add('show'); });
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      t.classList.remove('show');
+      setTimeout(function () { t.hidden = true; }, 240);
+    }, 4200);
+  }
+
+  /* ---------- confirm ---------- */
+  function openConfirm(msg, fn) {
+    confirmAction = fn;
+    el('confirm-msg').textContent = msg;
+    el('confirm').hidden = false;
+    el('confirm-cancel').focus();
+  }
+
+  function closeConfirm() {
+    el('confirm').hidden = true;
+    confirmAction = null;
+  }
+
+  /* ---------- mutations ---------- */
+  function setOverride(key, value) {
+    var team = String(state.me);
+    if (!state.overrides[team]) state.overrides[team] = {};
+    if (value === null) delete state.overrides[team][key];
+    else state.overrides[team][key] = value;
+    if (!Object.keys(state.overrides[team]).length) delete state.overrides[team];
+    save();
+    renderAll();
+    if (activeSheet === el('sheet')) renderDaySheet();
+  }
+
+  /* ---------- ICS ---------- */
+  function icsEscape(s) {
+    return String(s)
+      .replace(/\\/g, '\\\\')
+      .replace(/;/g, '\\;')
+      .replace(/,/g, '\\,')
+      .replace(/\r?\n/g, '\\n');
+  }
+
+  function icsUTC(d) {
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getUTCFullYear() + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) +
+      'T' + p(d.getUTCHours()) + p(d.getUTCMinutes()) + '00Z';
+  }
+
+  function utf8len(ch) {
+    var c = ch.codePointAt(0);
+    if (c < 0x80) return 1;
+    if (c < 0x800) return 2;
+    if (c < 0x10000) return 3;
+    return 4;
+  }
+
+  function foldLine(line) {
+    var parts = [];
+    var cur = '';
+    var bytes = 0;
+    Array.from(line).forEach(function (ch) {
+      var n = utf8len(ch);
+      if (bytes + n > 75) {
+        parts.push(cur);
+        cur = ' ' + ch;
+        bytes = 1 + n;
+      } else {
+        cur += ch;
+        bytes += n;
+      }
+    });
+    parts.push(cur);
+    return parts.join('\r\n');
+  }
+
+  function buildICS() {
+    var now = new Date();
+    var lead = state.remind.leadMinutes;
+    var team = S.TEAMS[state.me];
+    var tz = 'Asia/Shanghai';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; } catch (e) { /* noop */ }
+
+    var lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//AiDaoBan//FiveTeamRotation//CN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'X-WR-CALNAME:' + icsEscape('爱倒班 · ' + team),
+      'X-WR-TIMEZONE:' + tz
+    ];
+    var count = 0;
+
+    for (var i = 0; i < 90; i++) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      var sh = effectiveOn(d, state.me);
+      if (!S.isWorkShift(sh)) continue;
+      var st = S.shiftStartDate(d.getFullYear(), d.getMonth(), d.getDate(), sh);
+      var en = S.shiftEndDate(d.getFullYear(), d.getMonth(), d.getDate(), sh);
+      var w = S.shiftWindow(sh);
+      var key = S.keyOfDate(d);
+
+      lines.push('BEGIN:VEVENT');
+      lines.push('UID:' + key + '-' + state.me + '-aidaoban@local');
+      lines.push('DTSTAMP:' + icsUTC(now));
+      lines.push('DTSTART:' + icsUTC(st));
+      lines.push('DTEND:' + icsUTC(en));
+      lines.push('SUMMARY:' + icsEscape(w.label + ' · ' + team));
+      lines.push('DESCRIPTION:' + icsEscape('爱倒班 · 五班三运转 · ' + w.label + ' ' + w.start + '-' + w.end));
+      lines.push('TRANSP:OPAQUE');
+      lines.push('BEGIN:VALARM');
+      lines.push('ACTION:DISPLAY');
+      lines.push('DESCRIPTION:' + icsEscape('提醒 · ' + w.start + ' 上' + w.label));
+      lines.push('TRIGGER:-PT' + lead + 'M');
+      lines.push('END:VALARM');
+      lines.push('END:VEVENT');
+      count++;
+    }
+
+    lines.push('END:VCALENDAR');
+    return { text: lines.map(foldLine).join('\r\n') + '\r\n', count: count };
+  }
+
+  function download(name, blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  /* ---------- reminders ---------- */
+  function checkReminders() {
+    if (!state.remind.enabled) return;
+    var now = new Date();
+    var lead = state.remind.leadMinutes * 60000;
+
+    for (var i = 0; i < 2; i++) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      var sh = effectiveOn(d, state.me);
+      if (!S.isWorkShift(sh)) continue;
+      var st = S.shiftStartDate(d.getFullYear(), d.getMonth(), d.getDate(), sh);
+      if (!st) continue;
+      var from = st.getTime() - lead;
+      if (now.getTime() >= from && now.getTime() < st.getTime()) {
+        var key = S.keyOfDate(d) + '-' + sh;
+        if (!state.lastAlert[key]) {
+          state.lastAlert[key] = true;
+          save();
+          var w = S.shiftWindow(sh);
+          toast('提醒 · 计划 ' + w.start + ' 上' + w.label);
+        }
+      }
+    }
+  }
+
+  function tick() {
+    var now = new Date();
+    var k = S.keyOfDate(now);
+    if (k !== lastDayKey) {
+      lastDayKey = k;
+      renderAll();
+    } else {
+      renderNow();
+    }
+    checkReminders();
+  }
+
+  /* ---------- view switching ---------- */
+  function setView(v) {
+    state.view = v;
+    save();
+    el('month-view').hidden = v !== 'month';
+    el('year-view').hidden = v !== 'year';
+    el('nav-month').classList.toggle('active', v === 'month');
+    el('btn-year').classList.toggle('active', v === 'year');
+    el('nav-settings').classList.remove('active');
+    if (v === 'year') renderYear();
+    else { renderNow(); renderMonth(); }
+    window.scrollTo(0, 0);
+  }
+
+  function openSettings() {
+    syncSettings();
+    openSheet(el('sheet-settings'));
+  }
+
+  /* ---------- events ---------- */
+  el('cal-grid').addEventListener('click', function (e) {
+    var btn = e.target.closest('.cal-cell');
+    if (!btn) return;
+    var parts = btn.getAttribute('data-date').split('-');
+    sheetDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    pickerOpen = false;
+    renderDaySheet();
+    openSheet(el('sheet'));
+  });
+
+  el('sheet').addEventListener('click', function (e) {
+    var pick = e.target.closest('[data-pick]');
+    if (pick && sheetDate) {
+      var picked = pick.getAttribute('data-pick');
+      var natural = S.shiftOfTeam(state.me, sheetDate.getFullYear(), sheetDate.getMonth(), sheetDate.getDate());
+      setOverride(S.keyOfDate(sheetDate), picked === natural ? null : picked);
+      pickerOpen = false;
+      renderDaySheet();
+      return;
+    }
+    var act = e.target.closest('[data-act]');
+    if (!act || !sheetDate) return;
+    var a = act.getAttribute('data-act');
+    var key = S.keyOfDate(sheetDate);
+    if (a === 'leave') {
+      setOverride(key, effectiveOn(sheetDate, state.me) === '年休' ? null : '年休');
+      pickerOpen = false;
+      renderDaySheet();
+    } else if (a === 'picker') {
+      pickerOpen = !pickerOpen;
+      renderDaySheet();
+    } else if (a === 'reset') {
+      setOverride(key, null);
+      pickerOpen = false;
+      renderDaySheet();
+    }
+  });
+
+  el('settings-body').addEventListener('click', function (e) {
+    var teamBtn = e.target.closest('[data-team]');
+    if (teamBtn) {
+      state.me = Number(teamBtn.getAttribute('data-team'));
+      state.lastAlert = {};
+      save();
+      syncSettings();
+      renderAll();
+      if (activeSheet === el('sheet')) renderDaySheet();
+      return;
+    }
+    var themeBtn = e.target.closest('[data-theme-val]');
+    if (themeBtn) {
+      state.theme = themeBtn.getAttribute('data-theme-val');
+      save();
+      applyTheme();
+      syncSettings();
+    }
+  });
+
+  el('set-remind').addEventListener('change', function () {
+    state.remind.enabled = this.checked;
+    save();
+    if (this.checked) checkReminders();
+  });
+
+  el('set-lead').addEventListener('change', function () {
+    var v = Number(this.value);
+    state.remind.leadMinutes = [30, 60, 90, 120, 180].indexOf(v) >= 0 ? v : 90;
+    save();
+    this.value = String(state.remind.leadMinutes);
+  });
+
+  el('set-leave-total').addEventListener('change', function () {
+    var n = parseInt(this.value, 10);
+    if (!isFinite(n) || n < 0) n = 0;
+    if (n > 366) n = 366;
+    var y = displayedYear();
+    if (!state.leave[state.me]) state.leave[state.me] = {};
+    state.leave[state.me][String(y)] = { total: n };
+    save();
+    this.value = n;
+    updateLeaveReadout();
+    renderAll();
+  });
+
+  el('btn-ics').addEventListener('click', function () {
+    var out = buildICS();
+    if (!out.count) { toast('未来 90 天没有上班班次'); return; }
+    download('aidaoban-90days.ics', new Blob([out.text], { type: 'text/calendar;charset=utf-8' }));
+    toast('已生成 ' + out.count + ' 个班次，点开文件添加到日历');
+  });
+
+  el('btn-export').addEventListener('click', function () {
+    var name = 'aidaoban-backup-' + S.keyOfDate(new Date()) + '.json';
+    download(name, new Blob([JSON.stringify(state, null, 2)], { type: 'application/json;charset=utf-8' }));
+    toast('备份已导出');
+  });
+
+  el('btn-import').addEventListener('click', function () { el('import-file').click(); });
+
+  el('import-file').addEventListener('change', function () {
+    var input = this;
+    var file = input.files && input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var parsed = JSON.parse(String(reader.result));
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('bad');
+        state = sanitize(mergeDeep(clone(DEFAULTS), parsed));
+        save();
+        applyTheme();
+        setView(state.view === 'year' ? 'year' : 'month');
+        syncSettings();
+        toast('备份已导入');
+      } catch (err) {
+        toast('备份文件无法读取');
+      }
+      input.value = '';
+    };
+    reader.onerror = function () { toast('备份文件无法读取'); };
+    reader.readAsText(file);
+  });
+
+  el('btn-clear').addEventListener('click', function () {
+    openConfirm('确定清空全部数据？年休标记与手动调班都会丢失，且无法恢复。', function () {
+      try { localStorage.removeItem(KEY); } catch (e) { /* noop */ }
+      state = sanitize(clone(DEFAULTS));
+      save();
+      applyTheme();
+      setView('month');
+      syncSettings();
+      toast('已清空');
+    });
+  });
+
+  el('confirm-cancel').addEventListener('click', closeConfirm);
+  el('confirm-ok').addEventListener('click', function () {
+    var fn = confirmAction;
+    closeConfirm();
+    if (fn) fn();
+  });
+
+  el('btn-prev').addEventListener('click', function () { changeMonth(-1); });
+  el('btn-next').addEventListener('click', function () { changeMonth(1); });
+  el('btn-today').addEventListener('click', function () {
+    var n = new Date();
+    curY = n.getFullYear();
+    curM = n.getMonth();
+    renderMonth();
+    animateGrid(1);
+  });
+
+  el('btn-year-prev').addEventListener('click', function () { yearViewY--; renderYear(); });
+  el('btn-year-next').addEventListener('click', function () { yearViewY++; renderYear(); });
+  el('btn-year-today').addEventListener('click', function () {
+    yearViewY = new Date().getFullYear();
+    renderYear();
+  });
+  el('year-grid').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-month]');
+    if (!b) return;
+    curY = yearViewY;
+    curM = Number(b.getAttribute('data-month'));
+    setView('month');
+  });
+
+  el('nav-month').addEventListener('click', function () { setView('month'); });
+  el('btn-year').addEventListener('click', function () { setView('year'); });
+  el('nav-settings').addEventListener('click', openSettings);
+  el('btn-settings').addEventListener('click', openSettings);
+
+  el('sheet-close').addEventListener('click', function () { closeSheet(el('sheet')); });
+  el('settings-close').addEventListener('click', function () { closeSheet(el('sheet-settings')); });
+  el('backdrop').addEventListener('click', function () { closeSheet(); });
+
+  el('ios-hint-close').addEventListener('click', function () {
+    state.hints.iosInstallDismissed = true;
+    save();
+    el('ios-hint').hidden = true;
+  });
+
+  /* swipe */
+  (function () {
+    var sx = 0, sy = 0, tracking = false;
+    var mv = el('month-view');
+    mv.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) return;
+      tracking = true;
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+    }, { passive: true });
+    mv.addEventListener('touchend', function (e) {
+      if (!tracking) return;
+      tracking = false;
+      var t = e.changedTouches[0];
+      var dx = t.clientX - sx;
+      var dy = t.clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        changeMonth(dx < 0 ? 1 : -1);
+      }
+    }, { passive: true });
+  })();
+
+  /* keyboard */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (!el('confirm').hidden) { closeConfirm(); return; }
+      if (activeSheet) { closeSheet(); return; }
+    }
+    if (!el('confirm').hidden && e.key === 'Tab') {
+      e.preventDefault();
+      var c1 = el('confirm-cancel'), c2 = el('confirm-ok');
+      (document.activeElement === c2 ? c1 : c2).focus();
+      return;
+    }
+    if (activeSheet && e.key === 'Tab') {
+      var f = focusables(activeSheet);
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      return;
+    }
+    if (activeSheet || !el('confirm').hidden) return;
+    if (el('month-view').hidden) return;
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); changeMonth(-1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); changeMonth(1); }
+  });
+
+  /* theme follow system */
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: light)');
+    var onScheme = function () { if (state.theme === 'auto') applyTheme(); };
+    if (mq.addEventListener) mq.addEventListener('change', onScheme);
+    else if (mq.addListener) mq.addListener(onScheme);
+  }
+
+  /* service worker */
+  if (location.protocol === 'http:' || location.protocol === 'https:') {
+    try {
+      navigator.serviceWorker.register('./sw.js').catch(function () { /* noop */ });
+    } catch (e) { /* noop */ }
+  }
+
+  /* ---------- boot ---------- */
+  function init() {
+    applyTheme();
+    renderLegend();
+    setView(state.view === 'year' ? 'year' : 'month');
+    syncSettings();
+    checkReminders();
+    bindDrag('sheet-handle', 'sheet');
+    bindDrag('settings-handle', 'sheet-settings');
+
+    if (!state.hints.iosInstallDismissed) {
+      var ua = navigator.userAgent;
+      var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      var isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+      var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+      if (isIOS && isSafari && !standalone) el('ios-hint').hidden = false;
+    }
+
+    setInterval(tick, 30000);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) tick();
+    });
+
+    document.documentElement.dataset.ready = '1';
+  }
+
+  init();
+
+})();
+</script>
+</body>
+</html>
