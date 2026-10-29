@@ -97,40 +97,15 @@ button { cursor: pointer; }
   max-width: 520px;
   margin: 0 auto;
   min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   border-inline: 1px solid var(--line);
   box-shadow: var(--shadow);
   overflow-x: hidden;
-  padding-bottom: calc(78px + env(safe-area-inset-bottom));
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
-.appbar {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: calc(9px + env(safe-area-inset-top)) 16px 9px;
-  background: var(--bar);
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  border-bottom: 1px solid var(--line);
-}
-.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.brand-mark {
-  width: 34px; height: 34px; flex: none;
-  display: grid; place-items: center;
-  border-radius: 11px;
-  background: linear-gradient(150deg, #F5A524 0%, #E5623C 48%, #5B7CFA 100%);
-  color: #0B0F14;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -.02em;
-  box-shadow: 0 6px 18px -8px rgba(245, 165, 36, .8);
-}
-.brand-text { min-width: 0; }
-.brand-name { font-size: 16px; font-weight: 750; letter-spacing: .01em; line-height: 1.15; }
-.brand-sub { font-size: 10.5px; color: var(--muted); letter-spacing: .16em; margin-top: 2px; }
 .appbar-spacer { flex: 1; }
 .icon-btn {
   width: 44px; height: 44px; flex: none;
@@ -167,14 +142,14 @@ button { cursor: pointer; }
 .ios-hint button svg { width: 15px; height: 15px; color: inherit; }
 
 /* ---------- views ---------- */
-.view { padding: 14px 14px 26px; }
+.view { padding: 12px 14px 10px; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
 /* ---------- now card ---------- */
 .now-card {
   position: relative;
   isolation: isolate;
-  padding: 16px 17px 15px;
-  border-radius: 22px;
+  padding: 13px 14px 12px;
+  border-radius: 18px;
   border: 1px solid var(--line);
   background: linear-gradient(158deg, var(--card2) 0%, var(--card) 62%);
   box-shadow: 0 20px 46px -30px #000, inset 0 1px 0 rgba(255, 255, 255, .04);
@@ -193,7 +168,7 @@ button { cursor: pointer; }
 .now-top { display: flex; align-items: center; gap: 8px; }
 .now-status {
   display: inline-flex; align-items: center; gap: 7px;
-  font-size: 11.5px; font-weight: 650; letter-spacing: .1em;
+  font-size: 10.5px; font-weight: 650; letter-spacing: .1em;
   color: var(--muted); text-transform: uppercase;
 }
 .dot {
@@ -201,19 +176,19 @@ button { cursor: pointer; }
   background: var(--sc, var(--accent));
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--sc, var(--accent)) 22%, transparent);
 }
-.now-time { margin-left: auto; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.now-time { margin-left: auto; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .now-title {
-  margin: 9px 0 0;
-  font-size: clamp(23px, 7.2vw, 29px);
-  line-height: 1.14;
+  margin: 7px 0 0;
+  font-size: clamp(19px, 5.6vw, 22px);
+  line-height: 1.16;
   font-weight: 800;
   letter-spacing: -.022em;
 }
-.now-sub { margin: 6px 0 0; font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+.now-sub { margin: 4px 0 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
 .now-sub b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
 .progress {
-  margin-top: 11px;
-  height: 6px;
+  margin-top: 8px;
+  height: 5px;
   border-radius: 99px;
   background: rgba(140, 155, 175, .18);
   overflow: hidden;
@@ -227,8 +202,8 @@ button { cursor: pointer; }
   transition: width .5s cubic-bezier(.2, .8, .3, 1);
 }
 .now-next {
-  margin-top: 13px;
-  padding-top: 12px;
+  margin-top: 9px;
+  padding-top: 9px;
   border-top: 1px dashed var(--line2);
   display: grid;
   grid-template-columns: auto 1fr;
@@ -236,36 +211,34 @@ button { cursor: pointer; }
   align-items: baseline;
 }
 .next-kicker { font-size: 10.5px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
-.next-main { font-size: 13.5px; line-height: 1.5; }
+.next-main { font-size: 12px; line-height: 1.45; }
 .next-main strong { font-weight: 750; }
 .next-main .sep { color: var(--muted); margin: 0 5px; }
 .next-count {
   grid-column: 1 / -1;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 .now-note { margin: 8px 0 0; font-size: 11.5px; color: var(--muted); }
 
 /* ---------- month head ---------- */
-.month-head { margin-top: 20px; }
-.month-row { display: flex; align-items: center; gap: 10px; }
-.month-title { margin: 0; font-size: 20px; font-weight: 780; letter-spacing: -.01em; }
-.month-title .yr { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-right: 6px; letter-spacing: .06em; }
+.month-head { margin-top: 12px; display: flex; align-items: center; gap: 6px; }
+
+.month-title { margin: 0 0 0 5px; flex: 1; min-width: 0; font-size: 17px; font-weight: 780; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.month-title .yr { font-size: 11px; font-weight: 600; color: var(--muted); margin-right: 4px; letter-spacing: .03em; }
 .leave-pill {
   margin-left: auto;
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 9px;
+  padding: 4px 8px;
   border-radius: 99px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   color: var(--nian-ink);
   background: var(--nian);
   white-space: nowrap;
 }
-.month-ctrl { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
-.month-ctrl .spacer { flex: 1; }
 .ghost-btn {
   height: 34px;
   padding: 0 11px;
@@ -280,7 +253,8 @@ button { cursor: pointer; }
 .ghost-btn:active { transform: scale(.96); }
 .ghost-btn svg { width: 15px; height: 15px; }
 .ctrl-btn {
-  width: 44px; height: 34px;
+  position: relative;
+  width: 32px; height: 30px;
   display: grid; place-items: center;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -289,16 +263,17 @@ button { cursor: pointer; }
 }
 .ctrl-btn svg { width: 17px; height: 17px; }
 .ctrl-btn:active { transform: scale(.94); }
+.ctrl-btn::after { content: ""; position: absolute; inset: -7px -6px; }
 
 /* ---------- calendar ---------- */
 .weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
-  margin: 10px 0 5px;
+  margin: 8px 0 4px;
   padding: 0;
   text-align: center;
-  font-size: 10.5px;
+  font-size: 10px;
   letter-spacing: .1em;
   color: var(--muted);
 }
@@ -306,16 +281,20 @@ button { cursor: pointer; }
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  grid-auto-rows: minmax(46px, 1fr);
+  gap: 3px;
+  flex: 1;
+  min-height: 0;
 }
 .cal-cell {
   position: relative;
-  min-height: 56px;
-  padding: 5px 2px 5px;
+  min-height: 50px;
+  padding: 5px 4px 6px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 3px;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 0;
   border: 1px solid var(--line);
   border-radius: 11px;
   background: var(--card);
@@ -324,7 +303,7 @@ button { cursor: pointer; }
 }
 .cal-cell:active { transform: scale(.955); }
 .cal-cell:hover { border-color: var(--line2); }
-.cal-cell .daynum { font-size: 12.5px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+.cal-cell .daynum { align-self: flex-start; padding-left: 3px; font-size: 12px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
 .cal-cell.dim { background: transparent; border-color: rgba(140, 155, 175, .10); }
 .cal-cell.dim .daynum { color: var(--muted); opacity: .65; }
 .cal-cell.dim .chip { opacity: .5; }
@@ -344,15 +323,15 @@ button { cursor: pointer; }
   align-items: center;
   justify-content: center;
   min-width: 0;
-  padding: 4px 5px;
-  border-radius: 7px;
-  font-size: 10.5px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  font-size: 10px;
   font-weight: 750;
   line-height: 1;
   letter-spacing: .02em;
   white-space: nowrap;
 }
-.cell-chip { width: 100%; }
+.cell-chip { width: 100%; padding: 4px 0; }
 .sh-bai { background: var(--bai); color: var(--bai-ink); }
 .sh-zhong { background: var(--zhong); color: var(--zhong-ink); }
 .sh-ye { background: var(--ye); color: var(--ye-ink); }
@@ -363,19 +342,25 @@ button { cursor: pointer; }
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 10px;
-  margin-top: 12px;
+  gap: 4px 9px;
+  margin-top: 9px;
 }
-.legend span { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--muted); }
-.legend i { width: 9px; height: 9px; border-radius: 3px; display: block; }
+.legend span { display: inline-flex; align-items: center; gap: 4px; font-size: 9.5px; color: var(--muted); }
+.legend i { width: 8px; height: 8px; border-radius: 3px; display: block; }
 .month-summary {
-  margin: 10px 0 0;
-  font-size: 11.5px;
+  margin: 0;
+  font-size: 10.5px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
-  line-height: 1.6;
+  line-height: 1.5;
+  flex: 1;
+  min-width: 0;
 }
 .month-summary b { color: var(--text); font-weight: 700; }
+
+.foot-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.ghost-btn.tiny { height: 28px; padding: 0 9px; font-size: 10.5px; }
+.ghost-btn.tiny svg { width: 13px; height: 13px; }
 
 /* ---------- year ---------- */
 .year-head { display: flex; align-items: center; gap: 10px; }
@@ -712,7 +697,7 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
 @media (max-width: 359px) {
   .view { padding-inline: 10px; }
   .cal-grid, .weekdays { gap: 0; }
-  .cal-cell { border-radius: 7px; border-inline-width: 0; min-height: 54px; }
+  .cal-cell { border-radius: 7px; border-inline-width: 0; }
   .cell-chip { font-size: 9.5px; padding: 3px 2px; }
   .cal-cell .daynum { font-size: 11.5px; }
   .seg button { font-size: 11px; padding: 0 2px; }
@@ -781,36 +766,14 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
     <button id="ios-hint-close" type="button" aria-label="关闭提示"><svg aria-hidden="true"><use href="#i-x"></use></svg></button>
   </div>
 
-  <header class="appbar">
-    <div class="brand">
-      <div class="brand-mark" aria-hidden="true">倒</div>
-      <div class="brand-text">
-        <div class="brand-name">爱倒班</div>
-        <div class="brand-sub">五班三运转</div>
-      </div>
-    </div>
-    <div class="appbar-spacer"></div>
-    <button id="btn-settings" class="icon-btn" type="button" aria-label="设置">
-      <svg aria-hidden="true"><use href="#i-gear"></use></svg>
-    </button>
-  </header>
-
   <main id="month-view" class="view">
     <section id="now-card" class="now-card" aria-live="polite"></section>
 
     <div class="month-head">
-      <div class="month-row">
-        <h2 class="month-title" id="month-title"></h2>
-        <span class="leave-pill" id="leave-pill"></span>
-      </div>
-      <div class="month-ctrl">
-        <button class="ctrl-btn" id="btn-prev" type="button" aria-label="上一个月"><svg aria-hidden="true"><use href="#i-left"></use></svg></button>
-        <button class="ctrl-btn" id="btn-next" type="button" aria-label="下一个月"><svg aria-hidden="true"><use href="#i-right"></use></svg></button>
-        <div class="spacer"></div>
-        <button class="ghost-btn" id="btn-today" type="button" hidden>
-          <svg aria-hidden="true"><use href="#i-today"></use></svg>回到今天
-        </button>
-      </div>
+      <button class="ctrl-btn" id="btn-prev" type="button" aria-label="上一个月"><svg aria-hidden="true"><use href="#i-left"></use></svg></button>
+      <button class="ctrl-btn" id="btn-next" type="button" aria-label="下一个月"><svg aria-hidden="true"><use href="#i-right"></use></svg></button>
+      <h2 class="month-title" id="month-title"></h2>
+      <span class="leave-pill" id="leave-pill"></span>
     </div>
 
     <div class="weekdays" aria-hidden="true">
@@ -819,7 +782,10 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
     <div class="cal-grid" id="cal-grid" aria-label="排班日历"></div>
 
     <div class="legend" id="legend" aria-hidden="true"></div>
-    <p class="month-summary" id="month-summary"></p>
+    <div class="foot-row">
+      <p class="month-summary" id="month-summary"></p>
+      <button class="ghost-btn tiny" id="btn-today" type="button" hidden>回到今天</button>
+    </div>
   </main>
 
   <main id="year-view" class="view" hidden>
@@ -928,9 +894,9 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
     <div class="set-block">
       <div class="set-head"><h3>系统日历</h3><p>真正能在锁屏时提醒</p></div>
       <button class="btn primary" id="btn-ics" type="button" style="width:100%">
-        <svg aria-hidden="true"><use href="#i-download"></use></svg>导出未来 90 天的班到系统日历
+        <svg aria-hidden="true"><use href="#i-download"></use></svg>导出长期班表到系统日历
       </button>
-      <p class="hint">生成 .ics 文件，在 iPhone 上点开后选择「添加全部」，之后由系统日历按你的提前量提醒。改了班表重新导出一次即可。</p>
+      <p class="hint">3 条「每 5 天重复」的事件即可覆盖全部年份；年休和调班会作为例外自动排除。导入后在系统日历里选择「添加全部」，之后由系统按你的提前量提醒。改了提前量或班表后需重新导出。</p>
     </div>
 
     <div class="set-block">
@@ -1683,13 +1649,25 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
     return parts.join('\r\n');
   }
 
+  function addDays(d, n) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  }
+
+  /*
+   * 导出长期班表：
+   * 排班是 5 天循环，所以白/中/夜 各生成 1 条 RRULE 重复事件即可覆盖所有年份，
+   * 年休与调班通过 EXDATE 排除，被调成别的班次的日期补一条一次性事件。
+   */
   function buildICS() {
     var now = new Date();
     var lead = state.remind.leadMinutes;
-    var team = S.TEAMS[state.me];
+    var teamIdx = state.me;
+    var team = S.TEAMS[teamIdx];
     var tz = 'Asia/Shanghai';
     try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; } catch (e) { /* noop */ }
 
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var ovMap = state.overrides[teamIdx] || {};
     var lines = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
@@ -1699,36 +1677,99 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
       'X-WR-CALNAME:' + icsEscape('爱倒班 · ' + team),
       'X-WR-TIMEZONE:' + tz
     ];
-    var count = 0;
+    var series = 0;
+    var exdates = 0;
+    var extra = 0;
 
-    for (var i = 0; i < 90; i++) {
-      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
-      var sh = effectiveOn(d, state.me);
-      if (!S.isWorkShift(sh)) continue;
-      var st = S.shiftStartDate(d.getFullYear(), d.getMonth(), d.getDate(), sh);
-      var en = S.shiftEndDate(d.getFullYear(), d.getMonth(), d.getDate(), sh);
+    function alarm(sh) {
       var w = S.shiftWindow(sh);
-      var key = S.keyOfDate(d);
-
-      lines.push('BEGIN:VEVENT');
-      lines.push('UID:' + key + '-' + state.me + '-aidaoban@local');
-      lines.push('DTSTAMP:' + icsUTC(now));
-      lines.push('DTSTART:' + icsUTC(st));
-      lines.push('DTEND:' + icsUTC(en));
-      lines.push('SUMMARY:' + icsEscape(w.label + ' · ' + team));
-      lines.push('DESCRIPTION:' + icsEscape('爱倒班 · 五班三运转 · ' + w.label + ' ' + w.start + '-' + w.end));
-      lines.push('TRANSP:OPAQUE');
-      lines.push('BEGIN:VALARM');
-      lines.push('ACTION:DISPLAY');
-      lines.push('DESCRIPTION:' + icsEscape('提醒 · ' + w.start + ' 上' + w.label));
-      lines.push('TRIGGER:-PT' + lead + 'M');
-      lines.push('END:VALARM');
-      lines.push('END:VEVENT');
-      count++;
+      return [
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:' + icsEscape('提醒 · ' + w.start + ' 上' + w.label),
+        'TRIGGER:-PT' + lead + 'M',
+        'END:VALARM'
+      ];
     }
 
+    function overrideParts(k) {
+      var q = k.split('-');
+      return { y: Number(q[0]), m: Number(q[1]) - 1, d: Number(q[2]) };
+    }
+
+    S.WORK_SHIFTS.forEach(function (sh) {
+      // 起点选第一个「没被改过」的自然班次日，避免 DTSTART 本身被 EXDATE 排除
+      var base = null;
+      var fallback = null;
+      for (var i = 0; i < 10; i++) {
+        var d = addDays(today, i);
+        if (S.shiftOfTeam(teamIdx, d.getFullYear(), d.getMonth(), d.getDate()) !== sh) continue;
+        if (!fallback) fallback = d;
+        var ov = ovMap[S.keyOfDate(d)];
+        if (!ov || ov === sh) { base = d; break; }
+      }
+      if (!base) base = fallback;
+      if (!base) return;
+
+      var w = S.shiftWindow(sh);
+      var st = S.shiftStartDate(base.getFullYear(), base.getMonth(), base.getDate(), sh);
+      var en = S.shiftEndDate(base.getFullYear(), base.getMonth(), base.getDate(), sh);
+
+      var ev = [
+        'BEGIN:VEVENT',
+        'UID:aidaoban-' + teamIdx + '-' + sh + '@local',
+        'DTSTAMP:' + icsUTC(now),
+        'DTSTART:' + icsUTC(st),
+        'DTEND:' + icsUTC(en),
+        'RRULE:FREQ=DAILY;INTERVAL=5'
+      ];
+
+      Object.keys(ovMap).forEach(function (k) {
+        var o = overrideParts(k);
+        if (S.shiftOfTeam(teamIdx, o.y, o.m, o.d) !== sh) return;
+        var ex = S.shiftStartDate(o.y, o.m, o.d, sh);
+        if (!ex || ex.getTime() < st.getTime()) return;
+        ev.push('EXDATE:' + icsUTC(ex));
+        exdates++;
+      });
+
+      lines = lines.concat(ev, [
+        'SUMMARY:' + icsEscape(w.label + ' · ' + team),
+        'DESCRIPTION:' + icsEscape('爱倒班 · 五班三运转 · ' + w.label + ' ' + w.start + '-' + w.end),
+        'TRANSP:OPAQUE'
+      ], alarm(sh), ['END:VEVENT']);
+      series++;
+    });
+
+    Object.keys(ovMap).forEach(function (k) {
+      var sh = ovMap[k];
+      if (!S.isWorkShift(sh)) return;
+      var o = overrideParts(k);
+      if (S.shiftOfTeam(teamIdx, o.y, o.m, o.d) === sh) return;
+      var st = S.shiftStartDate(o.y, o.m, o.d, sh);
+      var en = S.shiftEndDate(o.y, o.m, o.d, sh);
+      if (!st || st.getTime() < today.getTime()) return;
+      var w = S.shiftWindow(sh);
+      lines = lines.concat([
+        'BEGIN:VEVENT',
+        'UID:aidaoban-ov-' + teamIdx + '-' + k + '@local',
+        'DTSTAMP:' + icsUTC(now),
+        'DTSTART:' + icsUTC(st),
+        'DTEND:' + icsUTC(en),
+        'SUMMARY:' + icsEscape(w.label + ' · ' + team + '（调班）'),
+        'DESCRIPTION:' + icsEscape('爱倒班 · 手动调整 · ' + w.label + ' ' + w.start + '-' + w.end),
+        'TRANSP:OPAQUE'
+      ], alarm(sh), ['END:VEVENT']);
+      extra++;
+    });
+
     lines.push('END:VCALENDAR');
-    return { text: lines.map(foldLine).join('\r\n') + '\r\n', count: count };
+    return {
+      text: lines.map(foldLine).join('\r\n') + '\r\n',
+      series: series,
+      exdates: exdates,
+      extra: extra
+    };
   }
 
   function download(name, blob) {
@@ -1885,9 +1926,12 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
 
   el('btn-ics').addEventListener('click', function () {
     var out = buildICS();
-    if (!out.count) { toast('未来 90 天没有上班班次'); return; }
-    download('aidaoban-90days.ics', new Blob([out.text], { type: 'text/calendar;charset=utf-8' }));
-    toast('已生成 ' + out.count + ' 个班次，点开文件添加到日历');
+    if (!out.series) { toast('没有可导出的班次'); return; }
+    download('aidaoban-shifts.ics', new Blob([out.text], { type: 'text/calendar;charset=utf-8' }));
+    var msg = '已生成 ' + out.series + ' 条长期重复';
+    if (out.exdates) msg += '，排除 ' + out.exdates + ' 天例外';
+    if (out.extra) msg += '，补 ' + out.extra + ' 次调班';
+    toast(msg);
   });
 
   el('btn-export').addEventListener('click', function () {
@@ -1968,7 +2012,6 @@ input.inp { width: 78px; text-align: center; font-variant-numeric: tabular-nums;
   el('nav-month').addEventListener('click', function () { setView('month'); });
   el('btn-year').addEventListener('click', function () { setView('year'); });
   el('nav-settings').addEventListener('click', openSettings);
-  el('btn-settings').addEventListener('click', openSettings);
 
   el('sheet-close').addEventListener('click', function () { closeSheet(el('sheet')); });
   el('settings-close').addEventListener('click', function () { closeSheet(el('sheet-settings')); });
