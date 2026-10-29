@@ -3,7 +3,7 @@
  * 策略：app shell 缓存优先（cache-first），同源 GET 请求网络回填。
  * 目的：断网可用、弱网秒开。更新时只要改 CACHE 版本号即可。
  */
-var CACHE = 'aidaoban-v6';
+var CACHE = 'aidaoban-v7';
 var SHELL = [
   './',
   './index.html',
